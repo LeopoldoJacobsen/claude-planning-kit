@@ -1,86 +1,88 @@
 # claude-planning-kit
 
-Kit de planejamento e execução para o Claude Code. Funciona como um "prompt inicial" reutilizável: você instala em qualquer projeto (novo ou existente) e o Claude passa a planejar e executar melhorias de forma estruturada — com descoberta do código, perguntas em lote, plano revisado por um agente independente e execução contínua à prova de conflitos.
+**English** | [Português (BR)](README.pt-BR.md) | [Español](README.es.md)
 
-**O loop completo:**
+A planning and execution kit for Claude Code. It works as a reusable "starter prompt": install it in any project (new or existing) and Claude starts planning and executing improvements in a structured way — with codebase discovery, batched questions, a plan reviewed by an independent agent, and continuous conflict-safe execution.
+
+**The full loop:**
 
 ```
-triagem → (brainstorm se a ideia for vaga) → discovery → perguntas → plano
-       → revisão independente → execução contínua → checklist final humano
+triage → (brainstorm if the idea is vague) → discovery → questions → plan
+      → independent review → continuous execution → final human checklist
 ```
 
-Tudo vira arquivo em `planning/<slug>/` — qualquer sessão retoma de onde parou, sem depender do histórico do chat.
+Everything becomes a file in `planning/<slug>/` — any session resumes from where it stopped, without depending on chat history.
 
-## Instalação
+## Installation
 
-### Opção 1 — Prompt de bootstrap (recomendado: o Claude faz tudo)
+### Option 1 — Bootstrap prompt (recommended: Claude does everything)
 
-| Situação | O que fazer |
+| Situation | What to do |
 |---|---|
-| **Projeto existente** | Abra o Claude Code na raiz do repositório e cole o conteúdo de [`prompts/BOOTSTRAP-EXISTING-PROJECT.md`](prompts/BOOTSTRAP-EXISTING-PROJECT.md) |
-| **Projeto novo (pasta vazia)** | Abra o Claude Code na pasta e cole [`prompts/BOOTSTRAP-NEW-PROJECT.md`](prompts/BOOTSTRAP-NEW-PROJECT.md), trocando apenas `<PROJECT-NAME>` pelo nome do projeto |
+| **Existing project** | Open Claude Code at the repository root and paste the contents of [`prompts/BOOTSTRAP-EXISTING-PROJECT.md`](prompts/BOOTSTRAP-EXISTING-PROJECT.md) |
+| **New project (empty folder)** | Open Claude Code in the folder and paste [`prompts/BOOTSTRAP-NEW-PROJECT.md`](prompts/BOOTSTRAP-NEW-PROJECT.md), replacing only `<PROJECT-NAME>` with your project's name |
 
-Os prompts já apontam para este repositório (`LeopoldoJacobsen/claude-planning-kit`) — é só copiar e colar. O Claude instala as skills, configura o roteador de triagem no `CLAUDE.md`, puxa as 4 skills compatíveis do Superpowers, verifica tudo e commita.
+The prompts already point to this repository (`LeopoldoJacobsen/claude-planning-kit`) — just copy and paste. Claude installs the skills, wires the triage router into `CLAUDE.md`, pulls the 4 compatible Superpowers skills, verifies everything, and commits.
 
-### Opção 2 — Plugin marketplace (com auto-update)
+### Option 2 — Plugin marketplace (with auto-update)
 
-Dentro do Claude Code:
+Inside Claude Code:
 
 ```
 /plugin marketplace add LeopoldoJacobsen/claude-planning-kit
 /plugin install planning-kit@claude-planning-kit
 ```
 
-As skills ficam disponíveis como `/planning-kit:feature-planning` e `/planning-kit:plan-execution`. Depois, adicione o bloco "Task Triage" de [`templates/CLAUDE-md-snippet.md`](templates/CLAUDE-md-snippet.md) ao `CLAUDE.md` de cada repositório.
+The skills become available as `/planning-kit:feature-planning` and `/planning-kit:plan-execution`. Then add the "Task Triage" block from [`templates/CLAUDE-md-snippet.md`](templates/CLAUDE-md-snippet.md) to each repository's `CLAUDE.md`.
 
-### Opção 3 — Cópia manual
+### Option 3 — Manual copy
 
-Copie `plugins/planning-kit/skills/*` para `.claude/skills/` e `plugins/planning-kit/agents/*` para `.claude/agents/` do projeto (ou para `~/.claude/`, valendo para todos os projetos). Adicione o bloco de triagem ao `CLAUDE.md`.
+Copy `plugins/planning-kit/skills/*` into the project's `.claude/skills/` and `plugins/planning-kit/agents/*` into `.claude/agents/` (or into `~/.claude/`, applying to all projects). Add the triage block to `CLAUDE.md`.
 
-Detalhes completos das três opções em [INSTALL.md](INSTALL.md).
+Full details for all three options in [INSTALL.md](INSTALL.md).
 
-## Como usar no dia a dia
+## Day-to-day usage
 
-1. **Descreva a melhoria normalmente**, em português ou inglês (ex.: "quero um sistema de afiliados com comissão de 10%"). Não precisa dizer "planeje".
-2. O roteador de triagem classifica sozinho:
+1. **Describe the improvement normally**, in Portuguese, English, or Spanish (e.g., "I want an affiliate system with 10% commission"). No need to say "plan".
+2. The triage router classifies it on its own:
 
-| Nível | Quando | O que acontece |
+| Level | When | What happens |
 |---|---|---|
-| **DIRECT** | Correção trivial, ≤2 arquivos, sem tocar schema/API/env/auth/pagamentos | Faz direto |
-| **LIGHT** | 3–10 arquivos, lógica moderada | Mini-plano de 5–10 linhas no chat; você dá o "go" |
-| **FULL** | Feature nova, schema de banco, contratos de API, env vars, auth, pagamentos, multi-tenant | Pipeline completo abaixo |
+| **DIRECT** | Trivial fix, ≤2 files, no schema/API/env/auth/payment impact | Just does it |
+| **LIGHT** | 3–10 files, moderate logic | 5–10 line mini-plan in chat; you give the "go" |
+| **FULL** | New feature, database schema, API contracts, env vars, auth, payments, multi-tenant | Full pipeline below |
 
-3. **No pipeline FULL:** ideia vaga passa primeiro pelo brainstorming. Depois o Claude explora o repositório (discovery), faz **um lote único de perguntas** — a única pausa antes da aprovação —, escreve o plano dividido em fases e um revisor independente com contexto limpo valida tudo.
-4. **Você aprova o plano e confirma os pré-requisitos da Fase 0** (chaves de API, contas, decisões de produto) — coletados uma única vez, no início.
-5. **Execução contínua:** o Claude executa todas as fases de agente em sequência (sessões paralelas são bem-vindas; locks evitam colisão) e termina entregando o `user-tasks.md` — sua lista de testes manuais, validações e aprovações, agrupada no final para nunca travar os agentes.
+3. **In the FULL pipeline:** a vague idea goes through brainstorming first. Then Claude explores the repository (discovery), asks **a single batch of questions** — the only pause before approval —, writes the plan split into phases, and an independent reviewer with a clean context validates everything.
+4. **You approve the plan and confirm the Phase 0 prerequisites** (API keys, accounts, product decisions) — collected once, up front.
+5. **Continuous execution:** Claude executes all agent phases back-to-back (parallel sessions welcome; locks prevent collisions) and finishes by handing you `user-tasks.md` — your list of manual tests, validations, and sign-offs, batched at the end so they never block the agents.
 
-## O que tem dentro
+## What's inside
 
 ```
-.claude-plugin/marketplace.json    # manifesto do marketplace (habilita o /plugin marketplace add)
+.claude-plugin/marketplace.json    # marketplace manifest (enables /plugin marketplace add)
 plugins/planning-kit/
-  skills/feature-planning/         # máquina de estados do planejamento (artefatos em planning/<slug>/)
-  skills/plan-execution/           # executor contínuo: locks, worktrees, scope fence, definition of done
-  agents/repo-explorer.md          # subagente read-only de descoberta (janela de contexto própria)
-  agents/plan-reviewer.md          # revisor adversarial de planos, com contexto limpo
-templates/CLAUDE-md-snippet.md     # roteador de triagem em 3 níveis para o CLAUDE.md de cada repo
-prompts/                           # prompts de bootstrap (projeto novo/existente) + versões standalone
+  skills/feature-planning/         # planning state machine (artifacts in planning/<slug>/)
+  skills/plan-execution/           # continuous executor: locks, worktrees, scope fence, definition of done
+  agents/repo-explorer.md          # read-only discovery subagent (own context window)
+  agents/plan-reviewer.md          # adversarial plan reviewer with a clean context
+templates/CLAUDE-md-snippet.md     # 3-tier triage router for each repo's CLAUDE.md
+prompts/                           # bootstrap prompts (new/existing project) + standalone versions
 ```
 
-As versões standalone (`prompts/*-standalone.md`) servem para agentes sem suporte a skills: cole o prompt inteiro na sessão e o pipeline roda do mesmo jeito.
+The standalone versions (`prompts/*-standalone.md`) are for agents without skill support: paste the whole prompt into the session and the pipeline runs the same way.
 
-## Princípios de design
+## Design principles
 
-- **Disco > chat:** cada fase grava um artefato em `planning/<slug>/`; qualquer sessão retoma pelos arquivos.
-- **Contínuo por padrão (v2):** as fases rodam em sequência na mesma sessão; `/clear` é válvula de escape, não ritual.
-- **Trabalho humano nas bordas (v2):** pré-requisitos viram a Fase 0, coletada no início; todo o resto que depende de você (QA manual, testes reais de pagamento/afiliado, DNS, aprovações) é sequenciado DEPOIS da última fase de agente, no `user-tasks.md`. O revisor rejeita planos com passos humanos enterrados no meio.
-- **Paralelismo seguro:** fases são reivindicadas via lock files no diretório `.git` compartilhado — sessões independentes e colegas de equipe nunca colidem.
-- **Compõe com Superpowers:** `brainstorming` refina ideias vagas; `test-driven-development`, `systematic-debugging` e `requesting-code-review` entram na execução. Os planners/executors do Superpowers NÃO são usados.
+- **Disk > chat:** every phase writes an artifact to `planning/<slug>/`; any session resumes from the files.
+- **Continuous by default (v2):** phases run back-to-back in the same session; `/clear` is a pressure valve, not a ritual.
+- **Human work at the edges (v2):** prerequisites become Phase 0, collected up front; everything else that depends on you (manual QA, real payment/affiliate tests, DNS, approvals) is sequenced AFTER the last agent phase, in `user-tasks.md`. The reviewer rejects plans with human steps buried mid-stream.
+- **Safe parallelism:** phases are claimed via lock files in the shared `.git` directory — independent sessions and teammates never collide.
+- **Composes with Superpowers:** `brainstorming` refines vague ideas; `test-driven-development`, `systematic-debugging`, and `requesting-code-review` plug into execution. Superpowers' own planners/executors are NOT used.
 
-## Compatibilidade com Superpowers
+## Superpowers compatibility
 
-Instale SOMENTE estas skills: `brainstorming`, `test-driven-development`, `systematic-debugging`, `requesting-code-review`. NUNCA instale `writing-plans`, `executing-plans`, `subagent-driven-development` ou `using-git-worktrees` junto com o kit — dois planners/executors brigam pelo mesmo gatilho. Os prompts de bootstrap já cuidam disso automaticamente.
+Install ONLY these skills: `brainstorming`, `test-driven-development`, `systematic-debugging`, `requesting-code-review`. NEVER install `writing-plans`, `executing-plans`, `subagent-driven-development`, or `using-git-worktrees` alongside the kit — two planners/executors fight for the same trigger. The bootstrap prompts already handle this automatically.
 
-## Melhorando o kit
+## Improving the kit
 
-Trate o texto das skills como código. Depois de cada feature real: leia os logs de execução em `planning/<slug>/execution/`, incorpore desvios recorrentes às skills, suba a versão nos dois manifestos (`plugin.json` e `marketplace.json`), commite e dê push. Projetos instalados via marketplace recebem a atualização automaticamente; cópias vendored re-rodam o prompt de bootstrap.
+Treat skill text like code. After each real feature: read the execution logs in `planning/<slug>/execution/`, fold recurring deviations into the skills, bump the version in both manifests (`plugin.json` and `marketplace.json`), commit, and push. Projects installed via the marketplace pick up the update automatically; vendored copies re-run the bootstrap prompt.
