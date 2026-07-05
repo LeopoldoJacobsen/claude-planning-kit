@@ -1,0 +1,7 @@
+{
+  "name": "planning-kit",
+  "version": "2.0.0",
+  "description": "Spec-driven feature planning (discovery, questions, plan, independent review) plus a continuous, lock-safe plan executor. User-dependent work is sequenced to Phase 0 prerequisites and a final human checklist. Composes with Superpowers execution skills.",
+  "author": { "name": "Leo" },
+  "keywords": ["planning", "workflow", "spec-driven", "execution", "worktrees"]
+}
