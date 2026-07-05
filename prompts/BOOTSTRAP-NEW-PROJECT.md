@@ -1,6 +1,6 @@
 # Bootstrap Prompt — NEW Project (from zero)
 
-Paste everything below into Claude Code inside an empty directory. Replace `<YOUR-GITHUB-USER>` and `<PROJECT-NAME>` first. Claude will initialize the repository, install the workflow, scaffold the project memory, and hand you a ready environment.
+Paste everything below into Claude Code inside an empty directory. Replace `<PROJECT-NAME>` first. Claude will initialize the repository, install the workflow, scaffold the project memory, and hand you a ready environment.
 
 ---
 
@@ -17,13 +17,13 @@ printf "# <PROJECT-NAME>\n\nProject initialized with claude-planning-kit v2.\n" 
 ## Step 2 — Install the planning kit (vendored copy)
 
 ```bash
-git clone --depth 1 https://github.com/<YOUR-GITHUB-USER>/claude-planning-kit /tmp/cpk
+git clone --depth 1 https://github.com/LeopoldoJacobsen/claude-planning-kit /tmp/cpk
 mkdir -p .claude/skills .claude/agents
 cp -r /tmp/cpk/plugins/planning-kit/skills/. .claude/skills/
 cp -r /tmp/cpk/plugins/planning-kit/agents/. .claude/agents/
 ```
 
-(Note for the human: for auto-updates instead of a vendored copy, run `/plugin marketplace add <YOUR-GITHUB-USER>/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself — skills then live under the `/planning-kit:` namespace.)
+(Note for the human: for auto-updates instead of a vendored copy, run `/plugin marketplace add LeopoldoJacobsen/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself — skills then live under the `/planning-kit:` namespace.)
 
 ## Step 3 — Create CLAUDE.md with the triage router
 

@@ -7,14 +7,12 @@ Three ways to install, from most to least automated.
 - **Existing repo:** paste `prompts/BOOTSTRAP-EXISTING-PROJECT.md` into Claude Code at the repo root.
 - **New project:** paste `prompts/BOOTSTRAP-NEW-PROJECT.md` into Claude Code in an empty directory.
 
-Both install the kit, wire the CLAUDE.md triage router, cherry-pick the four compatible Superpowers skills (brainstorming, test-driven-development, systematic-debugging, requesting-code-review), verify, and commit. Replace `<YOUR-GITHUB-USER>` before pasting.
+Both install the kit, wire the CLAUDE.md triage router, cherry-pick the four compatible Superpowers skills (brainstorming, test-driven-development, systematic-debugging, requesting-code-review), verify, and commit. The prompts already point to `LeopoldoJacobsen/claude-planning-kit` — just copy and paste.
 
 ## 2. Plugin marketplace (auto-updates)
 
-Requires this repo to be public on GitHub.
-
 ```
-/plugin marketplace add <YOUR-GITHUB-USER>/claude-planning-kit
+/plugin marketplace add LeopoldoJacobsen/claude-planning-kit
 /plugin install planning-kit@claude-planning-kit
 ```
 
@@ -23,16 +21,6 @@ Skills are namespaced: `/planning-kit:feature-planning`, `/planning-kit:plan-exe
 ## 3. Manual copy
 
 Copy `plugins/planning-kit/skills/*` into `.claude/skills/` and `plugins/planning-kit/agents/*` into `.claude/agents/` (project-level, committed) or into `~/.claude/` (personal, all projects). Append the triage block to `CLAUDE.md`.
-
-## Publishing this repo (one-time)
-
-```bash
-cd claude-planning-kit
-git init -b main && git add -A && git commit -m "feat: claude-planning-kit v2.0.0"
-gh repo create claude-planning-kit --public --source . --push
-```
-
-Public visibility is required for `/plugin marketplace add` to fetch it. Optional sanity check before pushing: `claude plugin validate .`
 
 ## Superpowers compatibility rules
 

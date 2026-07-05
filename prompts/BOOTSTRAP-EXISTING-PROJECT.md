@@ -1,6 +1,6 @@
 # Bootstrap Prompt — EXISTING Project
 
-Paste everything below into Claude Code at the root of an existing repository. Replace `<YOUR-GITHUB-USER>` first. Claude will perform the whole installation, verify it, and commit.
+Paste everything below into Claude Code at the root of an existing repository. Claude will perform the whole installation, verify it, and commit.
 
 ---
 
@@ -9,13 +9,13 @@ You are setting up this repository to use the **claude-planning-kit** workflow (
 ## Step 1 — Install the planning kit (vendored copy)
 
 ```bash
-git clone --depth 1 https://github.com/<YOUR-GITHUB-USER>/claude-planning-kit /tmp/cpk
+git clone --depth 1 https://github.com/LeopoldoJacobsen/claude-planning-kit /tmp/cpk
 mkdir -p .claude/skills .claude/agents
 cp -r /tmp/cpk/plugins/planning-kit/skills/. .claude/skills/
 cp -r /tmp/cpk/plugins/planning-kit/agents/. .claude/agents/
 ```
 
-(Note for the human: if you prefer auto-updates over a vendored copy, run `/plugin marketplace add <YOUR-GITHUB-USER>/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself instead of Step 1 — skills then live under the `/planning-kit:` namespace.)
+(Note for the human: if you prefer auto-updates over a vendored copy, run `/plugin marketplace add LeopoldoJacobsen/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself instead of Step 1 — skills then live under the `/planning-kit:` namespace.)
 
 ## Step 2 — Wire the triage router into CLAUDE.md
 

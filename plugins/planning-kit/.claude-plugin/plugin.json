@@ -2,6 +2,8 @@
   "name": "planning-kit",
   "version": "2.0.0",
   "description": "Spec-driven feature planning (discovery, questions, plan, independent review) plus a continuous, lock-safe plan executor. User-dependent work is sequenced to Phase 0 prerequisites and a final human checklist. Composes with Superpowers execution skills.",
-  "author": { "name": "Leo" },
+  "author": { "name": "Leopoldo Jacobsen" },
+  "homepage": "https://github.com/LeopoldoJacobsen/claude-planning-kit",
+  "repository": "https://github.com/LeopoldoJacobsen/claude-planning-kit",
   "keywords": ["planning", "workflow", "spec-driven", "execution", "worktrees"]
 }
