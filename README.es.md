@@ -4,6 +4,8 @@
 
 Kit de planificación y ejecución para Claude Code. Funciona como un "prompt inicial" reutilizable: lo instalas en cualquier proyecto (nuevo o existente) y Claude comienza a planificar y ejecutar mejoras de forma estructurada — con descubrimiento del código, preguntas en lote, un plan revisado por un agente independiente y ejecución continua a prueba de conflictos.
 
+> **Resumen visual:** [leopoldojacobsen.github.io/claude-planning-kit](https://leopoldojacobsen.github.io/claude-planning-kit/) — cómo funciona, el workflow completo y qué hace / no hace, en una sola página (en inglés).
+
 **El ciclo completo:**
 
 ```

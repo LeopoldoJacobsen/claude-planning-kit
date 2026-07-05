@@ -4,6 +4,8 @@
 
 A planning and execution kit for Claude Code. It works as a reusable "starter prompt": install it in any project (new or existing) and Claude starts planning and executing improvements in a structured way — with codebase discovery, batched questions, a plan reviewed by an independent agent, and continuous conflict-safe execution.
 
+> **Visual overview:** [leopoldojacobsen.github.io/claude-planning-kit](https://leopoldojacobsen.github.io/claude-planning-kit/) — how it works, the full workflow, and what it does / doesn't do, on a single page.
+
 **The full loop:**
 
 ```
