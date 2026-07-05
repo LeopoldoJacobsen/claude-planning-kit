@@ -84,7 +84,7 @@ Each implementation phase gets its own `phases/phase-N.md` containing everything
 
 ## PHASE: REVIEW → `planning/<slug>/plan-review.md`
 
-Dispatch the `plan-reviewer` subagent with the paths to `plan.md`, `phases/`, `user-tasks.md`, and `context-snapshot.md`. Its fresh context is the point: if the plan cannot be validated from the artifacts alone, it is under-specified. Among its failure classes, it will reject any user-dependent step buried mid-plan.
+Dispatch the `plan-reviewer` subagent with the paths to `plan.md`, `phases/`, `user-tasks.md`, `context-snapshot.md`, and — when brainstorming produced one — `design.md`. Its fresh context is the point: if the plan cannot be validated from the artifacts alone, it is under-specified. Among its failure classes, it will reject any user-dependent step buried mid-plan and, when a design doc exists, any undocumented divergence between the plan and the decisions approved in brainstorming.
 
 Save the subagent's full report verbatim to `plan-review.md`, including its verdict: `APPROVED` or `CHANGES REQUIRED` with numbered findings (severity, evidence path, suggested fix).
 
