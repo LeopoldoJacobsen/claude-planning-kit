@@ -17,6 +17,8 @@ Todo se convierte en un archivo en `planning/<slug>/` — cualquier sesión reto
 
 ## Instalación
 
+> ¿El kit ya está instalado en el proyecto? No hay nada que memorizar ni comandos que ejecutar — solo describe lo que quieres. Mira [Uso en el día a día](#uso-en-el-día-a-día).
+
 ### Opción 1 — Prompt de bootstrap (recomendado: Claude lo hace todo)
 
 | Situación | Qué hacer |
@@ -57,6 +59,7 @@ Detalles completos de las tres opciones en [INSTALL.md](INSTALL.md).
 3. **En el pipeline FULL:** una idea vaga pasa primero por el brainstorming. Después Claude explora el repositorio (discovery), hace **un único lote de preguntas** — la única pausa antes de la aprobación —, escribe el plan dividido en fases y un revisor independiente con contexto limpio valida todo.
 4. **Tú apruebas el plan y confirmas los prerrequisitos de la Fase 0** (claves de API, cuentas, decisiones de producto) — recolectados una sola vez, al inicio.
 5. **Ejecución continua:** Claude ejecuta todas las fases de agente en secuencia (las sesiones paralelas son bienvenidas; los locks evitan colisiones) y termina entregándote `user-tasks.md` — tu lista de pruebas manuales, validaciones y aprobaciones, agrupada al final para nunca bloquear a los agentes.
+6. **Ejecutar o retomar después:** en cualquier sesión nueva, di "continúa el plan" o "ejecuta el plan del sistema-de-afiliados" — o simplemente referencia la carpeta `planning/<slug>/`. El estado vive en disco, así que la ejecución retoma exactamente donde se detuvo, incluso días después o en la máquina de un compañero.
 
 ## Qué hay dentro
 

@@ -17,6 +17,8 @@ Everything becomes a file in `planning/<slug>/` — any session resumes from whe
 
 ## Installation
 
+> Kit already installed in the project? There's nothing to memorize and no command to run — just describe what you want. See [Day-to-day usage](#day-to-day-usage).
+
 ### Option 1 — Bootstrap prompt (recommended: Claude does everything)
 
 | Situation | What to do |
@@ -57,6 +59,7 @@ Full details for all three options in [INSTALL.md](INSTALL.md).
 3. **In the FULL pipeline:** a vague idea goes through brainstorming first. Then Claude explores the repository (discovery), asks **a single batch of questions** — the only pause before approval —, writes the plan split into phases, and an independent reviewer with a clean context validates everything.
 4. **You approve the plan and confirm the Phase 0 prerequisites** (API keys, accounts, product decisions) — collected once, up front.
 5. **Continuous execution:** Claude executes all agent phases back-to-back (parallel sessions welcome; locks prevent collisions) and finishes by handing you `user-tasks.md` — your list of manual tests, validations, and sign-offs, batched at the end so they never block the agents.
+6. **Executing or resuming later:** in any new session, say "continue the plan" or "execute the affiliate-system plan" — or just reference the `planning/<slug>/` folder. State lives on disk, so execution picks up exactly where it stopped, even days later or on a teammate's machine.
 
 ## What's inside
 
