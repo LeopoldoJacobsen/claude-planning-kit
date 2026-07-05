@@ -201,22 +201,40 @@
   .does li::before   { content: "✓"; color: var(--green); }
   .doesnt li::before { content: "✕"; color: var(--rust); }
 
-  /* ---------- install ---------- */
-  .installs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .install {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 24px;
-    display: flex; flex-direction: column; gap: 12px;
+  /* ---------- get started: scenarios ---------- */
+  .scenario {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    padding: 28px; margin-bottom: 14px;
+    display: grid; grid-template-columns: 250px 1fr; gap: 28px;
   }
-  .install .opt-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--amber); text-transform: uppercase; }
-  .install h3 { font-family: var(--display); font-size: 19px; font-weight: 600; }
-  .install p { font-size: 13.5px; color: var(--paper-dim); flex-grow: 1; }
-  .install pre {
+  .scenario > div { min-width: 0; }
+  .scn-num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--amber); text-transform: uppercase; display: block; margin-bottom: 12px; }
+  .scenario h3 { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.25; }
+  .scn-sub { font-size: 13px; color: var(--paper-dim); margin-top: 10px; }
+  .steps { list-style: none; counter-reset: s; margin-bottom: 16px; }
+  .steps li {
+    counter-increment: s; position: relative; padding: 0 0 12px 34px;
+    font-size: 14.5px; color: var(--paper-dim);
+  }
+  .steps li::before {
+    content: counter(s, decimal-leading-zero); position: absolute; left: 0; top: 2px;
+    font-family: var(--mono); font-size: 11px; color: var(--amber);
+  }
+  .steps li strong { color: var(--paper); font-weight: 600; }
+  .term {
     background: var(--ink); border: 1px solid var(--line); border-radius: 4px;
-    padding: 12px 14px; font-family: var(--mono); font-size: 11.5px; line-height: 1.8;
-    color: var(--paper); overflow-x: auto;
+    padding: 14px 16px; font-family: var(--mono); font-size: 12px; line-height: 2;
+    color: var(--paper); overflow-x: auto; margin: 0;
   }
-  .install pre .c { color: var(--paper-dim); }
-  .rec { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--green); border: 1px solid rgba(125,208,140,0.35); padding: 2px 7px; border-radius: 3px; margin-left: 8px; }
+  .term .pr { color: var(--green); font-weight: 600; }
+  .term .res { color: var(--paper-dim); }
+  .term .t-full { color: var(--amber); font-weight: 600; }
+  .term .t-dir { color: var(--green); font-weight: 600; }
+  .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 34px; }
+  .route { background: var(--panel); border: 1px dashed var(--line-strong); border-radius: 6px; padding: 18px 20px; }
+  .route h4 { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper-dim); margin-bottom: 10px; font-weight: 500; }
+  .route pre { background: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; font-family: var(--mono); font-size: 11.5px; line-height: 1.8; color: var(--paper); overflow-x: auto; }
+  .route .c { color: var(--paper-dim); }
 
   /* ---------- footer ---------- */
   footer { padding: 44px 0 60px; }
@@ -226,7 +244,7 @@
   .foot a:hover { text-decoration: underline; }
 
   @media (max-width: 800px) {
-    .concepts, .duo, .installs { grid-template-columns: 1fr; }
+    .concepts, .duo, .scenario, .routes { grid-template-columns: 1fr; }
     .hero { padding: 64px 0 52px; }
     section { padding: 56px 0; }
     .triage th:nth-child(2), .triage td:nth-child(2) { display: none; }
@@ -240,8 +258,8 @@
     <a class="brand" href="#top"><span class="dollar">$</span>claude-planning-kit</a>
     <div class="nav-right">
       <a href="#workflow">workflow</a>
+      <a href="#start">get started</a>
       <a href="#does">does / doesn't</a>
-      <a href="#install">install</a>
       <a href="https://github.com/LeopoldoJacobsen/claude-planning-kit">github ↗</a>
       <span class="badge">v2.1.0</span>
     </div>
@@ -363,10 +381,89 @@
     </div>
   </section>
 
+  <!-- ============ GET STARTED ============ -->
+  <section id="start">
+    <div class="wrap">
+      <p class="sec-label"><b>03</b> Get started</p>
+      <h2>Three situations, three entry points</h2>
+      <p class="sec-intro">How you begin depends on whether the kit is already installed. In every case the day-to-day interface is the same: plain language in the chat — Portuguese, English or Spanish. Full install detail lives in <a href="https://github.com/LeopoldoJacobsen/claude-planning-kit/blob/main/INSTALL.md" style="color: var(--amber);">INSTALL.md</a>.</p>
+
+      <div class="scenario">
+        <div>
+          <span class="scn-num">Situation A</span>
+          <h3>Existing project,<br>kit not installed</h3>
+          <p class="scn-sub">You have a codebase and want it to adopt the workflow.</p>
+        </div>
+        <div>
+          <ol class="steps">
+            <li><strong>Open Claude Code at the repository root</strong> and paste the entire contents of <code>prompts/BOOTSTRAP-EXISTING-PROJECT.md</code>. Nothing to edit — it already points at this repo.</li>
+            <li><strong>Claude installs everything itself:</strong> vendors the two skills and two subagents into <code>.claude/</code>, appends the triage router to <code>CLAUDE.md</code>, cherry-picks the four compatible Superpowers skills, verifies the result, and commits it on a <code>chore/claude-planning-kit</code> branch.</li>
+            <li><strong>Merge that branch.</strong> The project is wired — from the next message on, you're in Situation C.</li>
+          </ol>
+          <pre class="term"><span class="pr">›</span> [paste BOOTSTRAP-EXISTING-PROJECT.md]
+<span class="res">↳ installs · wires CLAUDE.md · verifies · commits — then stops; no feature work in that session</span></pre>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div>
+          <span class="scn-num">Situation B</span>
+          <h3>New project,<br>from an empty folder</h3>
+          <p class="scn-sub">Nothing exists yet — not even git.</p>
+        </div>
+        <div>
+          <ol class="steps">
+            <li><strong>Create an empty directory</strong>, open Claude Code inside it, and paste <code>prompts/BOOTSTRAP-NEW-PROJECT.md</code> — replacing only <code>&lt;PROJECT-NAME&gt;</code>.</li>
+            <li><strong>Claude initializes the repository</strong> (git, .gitignore, README), installs the kit, creates <code>CLAUDE.md</code> with the triage router, and scaffolds <code>memory-bank/</code> — project brief, architecture, decisions, changelog, glossary — all marked TBD for the pipeline's discovery phase to fill in as real decisions are made.</li>
+            <li><strong>Describe your first feature.</strong> Planning starts at discovery; brand-new repos get the context scaffold instead of exploration.</li>
+          </ol>
+          <pre class="term"><span class="pr">›</span> [paste BOOTSTRAP-NEW-PROJECT.md with PROJECT-NAME filled in]
+<span class="res">↳ git init · kit installed · memory-bank/ scaffolded · committed — ready for feature nº 1</span></pre>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div>
+          <span class="scn-num">Situation C</span>
+          <h3>Kit already installed —<br>how it triggers</h3>
+          <p class="scn-sub">There is no command to memorize. The router does the routing.</p>
+        </div>
+        <div>
+          <ol class="steps">
+            <li><strong>Just describe the change.</strong> The triage block in <code>CLAUDE.md</code> is always loaded: it classifies every request and states the tier in one line. FULL-tier requests trigger the <code>feature-planning</code> skill on their own — you never have to say "plan".</li>
+            <li><strong>Vague idea?</strong> The pipeline runs <code>superpowers:brainstorming</code> first, turns it into a design doc, and continues into discovery from there.</li>
+            <li><strong>Executing and resuming:</strong> say "execute the plan", "continue the plan", "run the next phases" — or reference any <code>planning/&lt;slug&gt;/</code> folder — and the <code>plan-execution</code> skill picks up from the artifacts on disk. Works in any session, days later, even from a teammate's machine.</li>
+          </ol>
+          <pre class="term"><span class="pr">›</span> add an affiliate system with 10% commission
+<span class="res">↳ triage: <span class="t-full">FULL</span> — feature-planning starts discovery</span>
+<span class="pr">›</span> fix the typo on the checkout button
+<span class="res">↳ triage: <span class="t-dir">DIRECT</span> — just fixes it, no pipeline</span>
+<span class="pr">›</span> continue the affiliate-system plan
+<span class="res">↳ plan-execution resumes from planning/affiliate-system/ — locks, phases, definition of done</span></pre>
+        </div>
+      </div>
+
+      <div class="routes">
+        <div class="route">
+          <h4>Alternative install — marketplace (auto-updates)</h4>
+          <pre>/plugin marketplace add LeopoldoJacobsen/claude-planning-kit
+/plugin install planning-kit@claude-planning-kit
+<span class="c"># then add templates/CLAUDE-md-snippet.md to CLAUDE.md</span></pre>
+        </div>
+        <div class="route">
+          <h4>Alternative install — manual copy</h4>
+          <pre>plugins/planning-kit/skills/* <span class="c">→</span> .claude/skills/
+plugins/planning-kit/agents/* <span class="c">→</span> .claude/agents/
+<span class="c"># or ~/.claude/ for all projects — see INSTALL.md</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ DOES / DOESN'T ============ -->
   <section id="does">
     <div class="wrap">
-      <p class="sec-label"><b>03</b> Scope, honestly</p>
+      <p class="sec-label"><b>04</b> Scope, honestly</p>
       <h2>What it does — and deliberately doesn't</h2>
       <p class="sec-intro">Most of the kit's value is in its refusals. The constraints below are enforced by the skills and the reviewer, not left to good intentions.</p>
       <div class="duo">
@@ -401,40 +498,6 @@
             <li><strong>Depend on chat history</strong>No <code>/clear</code> rituals, no "remember earlier". State lives on disk, sessions are replaceable.</li>
             <li><strong>Tolerate competing planners</strong>Superpowers' <code>writing-plans</code>, <code>executing-plans</code>, <code>subagent-driven-development</code> and <code>using-git-worktrees</code> are explicitly excluded — two planners fighting for the same trigger is worse than one.</li>
           </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ INSTALL ============ -->
-  <section id="install">
-    <div class="wrap">
-      <p class="sec-label"><b>04</b> Install</p>
-      <h2>Three ways in</h2>
-      <p class="sec-intro">Full details live in <a href="https://github.com/LeopoldoJacobsen/claude-planning-kit/blob/main/INSTALL.md" style="color: var(--amber);">INSTALL.md</a>. Whichever route you pick, the triage router block from <code>templates/CLAUDE-md-snippet.md</code> goes into each repo's <code>CLAUDE.md</code>.</p>
-      <div class="installs">
-        <div class="install">
-          <span class="opt-label">Option 1 <span class="rec">recommended</span></span>
-          <h3>Bootstrap prompt</h3>
-          <p>Paste one prompt into Claude Code and it installs the kit, wires the router, cherry-picks the four compatible Superpowers skills, verifies and commits.</p>
-          <pre><span class="c"># existing repo → paste</span>
-prompts/BOOTSTRAP-EXISTING-PROJECT.md
-<span class="c"># empty folder → paste</span>
-prompts/BOOTSTRAP-NEW-PROJECT.md</pre>
-        </div>
-        <div class="install">
-          <span class="opt-label">Option 2</span>
-          <h3>Plugin marketplace</h3>
-          <p>Auto-updating install. Skills become <code>/planning-kit:feature-planning</code> and <code>/planning-kit:plan-execution</code>.</p>
-          <pre>/plugin marketplace add LeopoldoJacobsen/claude-planning-kit
-/plugin install planning-kit@claude-planning-kit</pre>
-        </div>
-        <div class="install">
-          <span class="opt-label">Option 3</span>
-          <h3>Manual copy</h3>
-          <p>Vendored copy, committed with your project — or dropped into <code>~/.claude/</code> for all projects.</p>
-          <pre>plugins/planning-kit/skills/* <span class="c">→</span> .claude/skills/
-plugins/planning-kit/agents/* <span class="c">→</span> .claude/agents/</pre>
         </div>
       </div>
     </div>
