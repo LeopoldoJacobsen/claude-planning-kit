@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>claude-planning-kit — how it works</title>
+<meta name="description" content="A spec-driven planning and continuous execution workflow for Claude Code. How it works, the full workflow, what it does and what it deliberately does not do.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0d14;
+    --panel: #10141f;
+    --panel-2: #141927;
+    --line: rgba(230, 225, 214, 0.10);
+    --line-strong: rgba(230, 225, 214, 0.22);
+    --paper: #e6e1d6;
+    --paper-dim: #9a958a;
+    --amber: #f0b354;
+    --green: #7dd08c;
+    --rust: #e06a50;
+    --blue: #7aa5d8;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+    --display: "Fraunces", Georgia, serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background-color: var(--ink);
+    background-image:
+      linear-gradient(rgba(230,225,214,0.030) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(230,225,214,0.030) 1px, transparent 1px);
+    background-size: 44px 44px;
+    color: var(--paper);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--amber); color: var(--ink); }
+
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- header ---------- */
+  header {
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10, 13, 20, 0.88);
+    backdrop-filter: blur(8px);
+  }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; max-width: 1060px; margin: 0 auto;
+  }
+  .brand { font-family: var(--mono); font-size: 14px; font-weight: 600; letter-spacing: 0.02em; color: var(--paper); text-decoration: none; }
+  .brand .dollar { color: var(--amber); margin-right: 8px; }
+  .nav-right { display: flex; align-items: center; gap: 18px; }
+  .nav-right a { font-family: var(--mono); font-size: 12.5px; color: var(--paper-dim); text-decoration: none; transition: color .15s; }
+  .nav-right a:hover { color: var(--amber); }
+  .badge {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    border: 1px solid var(--line-strong); border-radius: 3px;
+    padding: 3px 8px; color: var(--amber); letter-spacing: 0.06em;
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 92px 0 72px; border-bottom: 1px solid var(--line); position: relative; overflow: hidden; }
+  .hero::after {
+    content: ""; position: absolute; top: -140px; right: -160px; width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(240,179,84,0.10) 0%, transparent 62%);
+    pointer-events: none;
+  }
+  .kicker {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--amber); margin-bottom: 22px;
+  }
+  .kicker::before { content: "◈ "; }
+  h1 {
+    font-family: var(--display); font-weight: 300; font-size: clamp(40px, 6.4vw, 74px);
+    line-height: 1.04; letter-spacing: -0.015em; max-width: 15ch;
+  }
+  h1 em { font-style: italic; font-weight: 600; color: var(--amber); }
+  .hero p.lede { max-width: 58ch; margin-top: 26px; font-size: 18px; color: var(--paper-dim); }
+  .hero p.lede strong { color: var(--paper); font-weight: 500; }
+
+  .loopline {
+    margin-top: 44px; padding: 20px 22px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    font-family: var(--mono); font-size: 13px; line-height: 2.1;
+    overflow-x: auto; white-space: nowrap;
+  }
+  .loopline .lb { color: var(--paper-dim); }
+  .loopline .st { color: var(--paper); }
+  .loopline .hl { color: var(--amber); }
+  .loopline .us { color: var(--rust); }
+  .loopline .ar { color: rgba(230,225,214,0.35); padding: 0 4px; }
+
+  /* staggered load-in */
+  .rise { opacity: 0; transform: translateY(14px); animation: rise .7s cubic-bezier(.2,.7,.3,1) forwards; }
+  .d1 { animation-delay: .05s } .d2 { animation-delay: .15s } .d3 { animation-delay: .25s } .d4 { animation-delay: .38s }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .rise { animation: none; opacity: 1; transform: none; } }
+
+  /* ---------- sections ---------- */
+  section { padding: 76px 0; border-bottom: 1px solid var(--line); }
+  .sec-label {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--paper-dim); margin-bottom: 14px;
+  }
+  .sec-label b { color: var(--amber); font-weight: 600; margin-right: 10px; }
+  h2 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 3.6vw, 40px); letter-spacing: -0.01em; margin-bottom: 18px; }
+  .sec-intro { color: var(--paper-dim); max-width: 62ch; margin-bottom: 42px; }
+  .sec-intro code, p code, li code, td code {
+    font-family: var(--mono); font-size: 0.86em; color: var(--amber);
+    background: rgba(240,179,84,0.08); border: 1px solid rgba(240,179,84,0.16);
+    padding: 1px 5px; border-radius: 3px; white-space: nowrap;
+  }
+
+  /* ---------- how it works: concept cards ---------- */
+  .concepts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .concept {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    padding: 26px 24px; position: relative; transition: border-color .2s, transform .2s;
+  }
+  .concept:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+  .concept .num {
+    font-family: var(--mono); font-size: 11px; color: var(--amber); letter-spacing: 0.14em;
+    display: block; margin-bottom: 14px;
+  }
+  .concept h3 { font-family: var(--display); font-size: 21px; font-weight: 600; margin-bottom: 10px; }
+  .concept p { font-size: 14.5px; color: var(--paper-dim); }
+
+  /* ---------- triage table ---------- */
+  .triage { width: 100%; border-collapse: collapse; margin-top: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .triage th, .triage td { text-align: left; padding: 15px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .triage tr:last-child td { border-bottom: none; }
+  .triage th {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--paper-dim); font-weight: 500; background: var(--panel-2);
+  }
+  .triage td { font-size: 14.5px; color: var(--paper-dim); }
+  .triage td:first-child { white-space: nowrap; }
+  .tier { font-family: var(--mono); font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 3px; letter-spacing: 0.05em; }
+  .tier.direct { color: var(--green); background: rgba(125,208,140,0.10); border: 1px solid rgba(125,208,140,0.25); }
+  .tier.light  { color: var(--blue);  background: rgba(122,165,216,0.10); border: 1px solid rgba(122,165,216,0.25); }
+  .tier.full   { color: var(--amber); background: rgba(240,179,84,0.10);  border: 1px solid rgba(240,179,84,0.28); }
+
+  /* ---------- pipeline rail ---------- */
+  .rail { position: relative; margin-top: 48px; padding-left: 44px; }
+  .rail::before {
+    content: ""; position: absolute; left: 15px; top: 8px; bottom: 8px; width: 2px;
+    background: linear-gradient(180deg, var(--amber) 0%, rgba(240,179,84,0.25) 55%, var(--rust) 100%);
+  }
+  .station { position: relative; padding: 0 0 40px; }
+  .station:last-child { padding-bottom: 0; }
+  .station::before {
+    content: ""; position: absolute; left: -37px; top: 6px; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--ink); border: 2.5px solid var(--amber);
+  }
+  .station.is-user::before { border-color: var(--rust); }
+  .station.is-loop::before { border-color: var(--blue); }
+  .station-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .station h3 { font-family: var(--display); font-size: 22px; font-weight: 600; }
+  .chip {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+    padding: 3px 8px; border-radius: 3px; text-transform: uppercase; align-self: center;
+  }
+  .chip.agent { color: var(--green); border: 1px solid rgba(125,208,140,0.35); }
+  .chip.sub   { color: var(--blue);  border: 1px solid rgba(122,165,216,0.35); }
+  .chip.you   { color: var(--rust);  border: 1px solid rgba(224,106,80,0.45); background: rgba(224,106,80,0.08); }
+  .chip.opt   { color: var(--paper-dim); border: 1px dashed var(--line-strong); }
+  .station p { color: var(--paper-dim); font-size: 15px; max-width: 66ch; }
+  .artifact {
+    display: inline-block; margin-top: 12px;
+    font-family: var(--mono); font-size: 12px; color: var(--amber);
+    background: rgba(240,179,84,0.07); border: 1px solid rgba(240,179,84,0.2);
+    padding: 4px 10px; border-radius: 3px;
+  }
+  .artifact::before { content: "→ writes "; color: var(--paper-dim); }
+  .loopback {
+    margin-top: 12px; font-family: var(--mono); font-size: 12px; color: var(--blue);
+    border-left: 2px solid rgba(122,165,216,0.4); padding: 6px 12px;
+  }
+
+  /* ---------- does / doesn't ---------- */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  .duo-col { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .duo-col.does    { border-top: 3px solid var(--green); }
+  .duo-col.doesnt  { border-top: 3px solid var(--rust); }
+  .duo-head { padding: 20px 24px 6px; }
+  .duo-head h3 { font-family: var(--display); font-size: 24px; font-weight: 600; }
+  .duo-head h3 span { font-style: italic; }
+  .duo-head p { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--paper-dim); margin-top: 4px; }
+  .duo ul { list-style: none; padding: 14px 24px 24px; }
+  .duo li { padding: 13px 0 13px 30px; border-bottom: 1px solid var(--line); position: relative; font-size: 14.5px; color: var(--paper-dim); }
+  .duo li:last-child { border-bottom: none; }
+  .duo li strong { display: block; color: var(--paper); font-weight: 600; margin-bottom: 2px; }
+  .duo li::before { position: absolute; left: 2px; top: 13px; font-family: var(--mono); font-weight: 600; }
+  .does li::before   { content: "✓"; color: var(--green); }
+  .doesnt li::before { content: "✕"; color: var(--rust); }
+
+  /* ---------- install ---------- */
+  .installs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .install {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 24px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .install .opt-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--amber); text-transform: uppercase; }
+  .install h3 { font-family: var(--display); font-size: 19px; font-weight: 600; }
+  .install p { font-size: 13.5px; color: var(--paper-dim); flex-grow: 1; }
+  .install pre {
+    background: var(--ink); border: 1px solid var(--line); border-radius: 4px;
+    padding: 12px 14px; font-family: var(--mono); font-size: 11.5px; line-height: 1.8;
+    color: var(--paper); overflow-x: auto;
+  }
+  .install pre .c { color: var(--paper-dim); }
+  .rec { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--green); border: 1px solid rgba(125,208,140,0.35); padding: 2px 7px; border-radius: 3px; margin-left: 8px; }
+
+  /* ---------- footer ---------- */
+  footer { padding: 44px 0 60px; }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; }
+  .foot p { font-family: var(--mono); font-size: 12px; color: var(--paper-dim); }
+  .foot a { color: var(--amber); text-decoration: none; }
+  .foot a:hover { text-decoration: underline; }
+
+  @media (max-width: 800px) {
+    .concepts, .duo, .installs { grid-template-columns: 1fr; }
+    .hero { padding: 64px 0 52px; }
+    section { padding: 56px 0; }
+    .triage th:nth-child(2), .triage td:nth-child(2) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="#top"><span class="dollar">$</span>claude-planning-kit</a>
+    <div class="nav-right">
+      <a href="#workflow">workflow</a>
+      <a href="#does">does / doesn't</a>
+      <a href="#install">install</a>
+      <a href="https://github.com/LeopoldoJacobsen/claude-planning-kit">github ↗</a>
+      <span class="badge">v2.1.0</span>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <div class="hero">
+    <div class="wrap">
+      <p class="kicker rise d1">A planning &amp; execution workflow for Claude Code</p>
+      <h1 class="rise d2">Plan like a <em>spec.</em><br>Execute like a <em>machine.</em></h1>
+      <p class="lede rise d3">claude-planning-kit is a reusable starter kit you install into any project. From then on, Claude plans and ships improvements through a disciplined pipeline: <strong>codebase discovery, one batch of questions, a phased plan, an independent fact-checking review, and continuous conflict-safe execution</strong> — with every step persisted to disk, not chat history.</p>
+      <div class="loopline rise d4">
+        <span class="lb">the loop&nbsp;&nbsp;</span><span class="st">triage</span><span class="ar">→</span><span class="lb">(brainstorm)</span><span class="ar">→</span><span class="st">discovery</span><span class="ar">→</span><span class="us">questions</span><span class="ar">→</span><span class="st">plan</span><span class="ar">→</span><span class="hl">independent review</span><span class="ar">→</span><span class="us">your approval</span><span class="ar">→</span><span class="st">continuous execution</span><span class="ar">→</span><span class="us">final human checklist</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section id="how">
+    <div class="wrap">
+      <p class="sec-label"><b>01</b> How it works</p>
+      <h2>Four ideas hold the whole thing together</h2>
+      <p class="sec-intro">The kit is two skills (<code>feature-planning</code>, <code>plan-execution</code>), two subagents (<code>repo-explorer</code>, <code>plan-reviewer</code>) and a 15-line triage router you paste into each repo's <code>CLAUDE.md</code>.</p>
+      <div class="concepts">
+        <div class="concept">
+          <span class="num">№ 1 — DISK OVER CHAT</span>
+          <h3>Every phase writes a file</h3>
+          <p>Each phase produces an artifact in <code>planning/&lt;slug&gt;/</code> — snapshot, decisions, plan, review, execution logs. Chat history is disposable; any session (or any teammate) resumes exactly where the last one stopped by reading the files.</p>
+        </div>
+        <div class="concept">
+          <span class="num">№ 2 — RIGHT-SIZED PROCESS</span>
+          <h3>Triage before anything</h3>
+          <p>A tiny always-loaded router classifies every request. Trivial fixes skip the pipeline entirely; medium tasks get a mini-plan in chat; only genuinely risky work (schema, API contracts, auth, payments, multi-tenancy) pays the full-pipeline cost.</p>
+        </div>
+        <div class="concept">
+          <span class="num">№ 3 — FRESH EYES ON EVERYTHING</span>
+          <h3>Subagents with their own context</h3>
+          <p>Discovery is delegated to read-only <code>repo-explorer</code> agents that return compressed, evidence-cited reports. The plan is judged by a <code>plan-reviewer</code> that starts with zero knowledge of the conversation — if the plan can't be validated from the artifacts alone, it's rejected as under-specified.</p>
+        </div>
+        <div class="concept">
+          <span class="num">№ 4 — HUMANS AT THE EDGES</span>
+          <h3>Your work is batched, never scattered</h3>
+          <p>Everything agents need from you up front (keys, accounts, decisions) is collected once, as Phase 0. Everything only you can verify (manual QA, real payment tests, DNS, sign-offs) is sequenced after the last agent phase, into a single <code>user-tasks.md</code> checklist.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WORKFLOW ============ -->
+  <section id="workflow">
+    <div class="wrap">
+      <p class="sec-label"><b>02</b> The workflow</p>
+      <h2>Triage first, then the pipeline</h2>
+      <p class="sec-intro">Describe the improvement in plain language — Portuguese, English or Spanish; no need to say "plan". The router classifies it:</p>
+
+      <table class="triage">
+        <tr><th>Tier</th><th>When</th><th>What happens</th></tr>
+        <tr>
+          <td><span class="tier direct">DIRECT</span></td>
+          <td>Trivial fix, ≤2 files, no schema / API / env / auth / payment impact</td>
+          <td>Just does it. No ceremony.</td>
+        </tr>
+        <tr>
+          <td><span class="tier light">LIGHT</span></td>
+          <td>3–10 files, moderate logic, still no contract impact</td>
+          <td>A 5–10 line mini-plan in chat; you say "go", it executes in-session.</td>
+        </tr>
+        <tr>
+          <td><span class="tier full">FULL</span></td>
+          <td>New features, DB schema, API contracts, env vars, auth, payments, multi-tenancy</td>
+          <td>The full pipeline below, run continuously in one session.</td>
+        </tr>
+      </table>
+
+      <div class="rail">
+        <div class="station">
+          <div class="station-head"><h3>Brainstorm</h3><span class="chip opt">optional</span><span class="chip agent">agent</span></div>
+          <p>Only when the idea is still vague. <code>superpowers:brainstorming</code> refines it into a design doc, which becomes the official feature request. Its handoff to Superpowers' own planner is deliberately blocked — this pipeline owns planning.</p>
+          <span class="artifact">planning/&lt;slug&gt;/design.md</span>
+        </div>
+        <div class="station">
+          <div class="station-head"><h3>Discovery</h3><span class="chip sub">subagents</span></div>
+          <p>Read-only <code>repo-explorer</code> agents investigate six areas — stack &amp; boundaries, data layer, overlapping features &amp; auth, integrations &amp; config, deploy conventions, available tooling. Findings come back compressed, every claim cited with a file path. Nothing is guessed.</p>
+          <span class="artifact">planning/&lt;slug&gt;/context-snapshot.md</span>
+        </div>
+        <div class="station is-user">
+          <div class="station-head"><h3>Questions</h3><span class="chip you">you — pause nº 1</span></div>
+          <p>Every ambiguity the snapshot can't answer becomes a numbered question — with why it matters and a suggested default, so you can just reply "accept defaults". One batch, one pause. Your answers become the decision record.</p>
+          <span class="artifact">planning/&lt;slug&gt;/decisions.md</span>
+        </div>
+        <div class="station">
+          <div class="station-head"><h3>Planning</h3><span class="chip agent">agent</span></div>
+          <p>A two-page overview plus one self-contained file per phase: exact files to touch, ordered steps, acceptance criteria, test commands, rollback note. Every phase is tagged <code>executor: agent</code> or <code>executor: user</code> — and user phases are pushed to the edges by rule.</p>
+          <span class="artifact">plan.md&nbsp;&nbsp;+&nbsp;&nbsp;phases/phase-N.md&nbsp;&nbsp;+&nbsp;&nbsp;user-tasks.md</span>
+        </div>
+        <div class="station is-loop">
+          <div class="station-head"><h3>Independent review</h3><span class="chip sub">subagent</span></div>
+          <p>The <code>plan-reviewer</code> reads only the artifacts — fresh context, zero conversation history — spot-checks 5–10 factual claims against the actual repository, and hunts for breaking contract changes, missing migrations, tenant-isolation holes, buried user steps, and undocumented divergence from the brainstorm's design doc.</p>
+          <span class="artifact">planning/&lt;slug&gt;/plan-review.md</span>
+          <div class="loopback">verdict: CHANGES REQUIRED → plan is fixed and re-reviewed, in a loop, until APPROVED</div>
+        </div>
+        <div class="station is-user">
+          <div class="station-head"><h3>Approval &amp; prerequisites</h3><span class="chip you">you — pause nº 2</span></div>
+          <p>You approve the reviewed plan and confirm the Phase 0 checklist: API keys, accounts, product decisions. Collected once, up front — never scattered mid-plan.</p>
+        </div>
+        <div class="station">
+          <div class="station-head"><h3>Continuous execution</h3><span class="chip agent">agent</span></div>
+          <p>All agent phases run back-to-back in one session. Each phase is claimed via a lock file in the shared <code>.git</code> directory (parallel sessions and teammates never collide), runs on its own branch or worktree, commits step by step, respects a scope fence, and must pass a strict definition of done — tests green, changelog updated, log written, branch merged.</p>
+          <span class="artifact">planning/&lt;slug&gt;/execution/phase-N-log.md</span>
+        </div>
+        <div class="station is-user">
+          <div class="station-head"><h3>Human checklist</h3><span class="chip you">you — the end</span></div>
+          <p>When only user phases remain, the kit hands you <code>user-tasks.md</code>: your manual tests, real-world validations and sign-offs, each with exact steps and what "pass" looks like — batched at the end so they never blocked the agents.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOES / DOESN'T ============ -->
+  <section id="does">
+    <div class="wrap">
+      <p class="sec-label"><b>03</b> Scope, honestly</p>
+      <h2>What it does — and deliberately doesn't</h2>
+      <p class="sec-intro">Most of the kit's value is in its refusals. The constraints below are enforced by the skills and the reviewer, not left to good intentions.</p>
+      <div class="duo">
+        <div class="duo-col does">
+          <div class="duo-head">
+            <h3>It <span>does</span></h3>
+            <p>enforced behaviors</p>
+          </div>
+          <ul>
+            <li><strong>Right-sizes the process</strong>Trivial requests are executed directly; only risky work pays for the full pipeline.</li>
+            <li><strong>Persists everything to disk</strong>Every phase writes an artifact to <code>planning/&lt;slug&gt;/</code>; any session resumes from files alone.</li>
+            <li><strong>Cites evidence for every claim</strong>Discovery findings carry file paths; anything unverifiable becomes a question, never an assumption.</li>
+            <li><strong>Fact-checks its own plan</strong>An independent reviewer validates the plan against the real codebase and the approved design doc before any code is written.</li>
+            <li><strong>Executes continuously and in parallel</strong>Lock files arbitrate between simultaneous sessions; phases run on isolated branches with step-by-step commits.</li>
+            <li><strong>Batches your work at the edges</strong>Phase 0 prerequisites up front, one human checklist at the end — agents are never blocked mid-stream.</li>
+            <li><strong>Composes with Superpowers</strong>Uses exactly four of its skills: brainstorming, test-driven-development, systematic-debugging, requesting-code-review.</li>
+            <li><strong>Auto-updates</strong>Installed as a plugin marketplace; skill improvements propagate to every project on the next update.</li>
+          </ul>
+        </div>
+        <div class="duo-col doesnt">
+          <div class="duo-head">
+            <h3>It does <span>not</span></h3>
+            <p>hard refusals</p>
+          </div>
+          <ul>
+            <li><strong>Make product decisions</strong>You answer the questions, approve the plan, and own every trade-off. The kit structures decisions; it doesn't take them.</li>
+            <li><strong>Guess</strong>No unverifiable claim survives planning. If the repo can't prove it, it becomes a clarifying question.</li>
+            <li><strong>Touch project files during planning</strong>Discovery through review is strictly read-only. Code changes only begin after your approval.</li>
+            <li><strong>Execute human work</strong>Real payment tests, DNS changes, third-party approvals, visual QA — it never claims a user phase; it sequences them for you.</li>
+            <li><strong>Silently redesign</strong>If a step can't be executed as written, it stops, records the mismatch, and asks — proposing the minimal correction.</li>
+            <li><strong>Work directly on main</strong>Every phase runs on its own branch or worktree, and the integration branch is never left red.</li>
+            <li><strong>Depend on chat history</strong>No <code>/clear</code> rituals, no "remember earlier". State lives on disk, sessions are replaceable.</li>
+            <li><strong>Tolerate competing planners</strong>Superpowers' <code>writing-plans</code>, <code>executing-plans</code>, <code>subagent-driven-development</code> and <code>using-git-worktrees</code> are explicitly excluded — two planners fighting for the same trigger is worse than one.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INSTALL ============ -->
+  <section id="install">
+    <div class="wrap">
+      <p class="sec-label"><b>04</b> Install</p>
+      <h2>Three ways in</h2>
+      <p class="sec-intro">Full details live in <a href="https://github.com/LeopoldoJacobsen/claude-planning-kit/blob/main/INSTALL.md" style="color: var(--amber);">INSTALL.md</a>. Whichever route you pick, the triage router block from <code>templates/CLAUDE-md-snippet.md</code> goes into each repo's <code>CLAUDE.md</code>.</p>
+      <div class="installs">
+        <div class="install">
+          <span class="opt-label">Option 1 <span class="rec">recommended</span></span>
+          <h3>Bootstrap prompt</h3>
+          <p>Paste one prompt into Claude Code and it installs the kit, wires the router, cherry-picks the four compatible Superpowers skills, verifies and commits.</p>
+          <pre><span class="c"># existing repo → paste</span>
+prompts/BOOTSTRAP-EXISTING-PROJECT.md
+<span class="c"># empty folder → paste</span>
+prompts/BOOTSTRAP-NEW-PROJECT.md</pre>
+        </div>
+        <div class="install">
+          <span class="opt-label">Option 2</span>
+          <h3>Plugin marketplace</h3>
+          <p>Auto-updating install. Skills become <code>/planning-kit:feature-planning</code> and <code>/planning-kit:plan-execution</code>.</p>
+          <pre>/plugin marketplace add LeopoldoJacobsen/claude-planning-kit
+/plugin install planning-kit@claude-planning-kit</pre>
+        </div>
+        <div class="install">
+          <span class="opt-label">Option 3</span>
+          <h3>Manual copy</h3>
+          <p>Vendored copy, committed with your project — or dropped into <code>~/.claude/</code> for all projects.</p>
+          <pre>plugins/planning-kit/skills/* <span class="c">→</span> .claude/skills/
+plugins/planning-kit/agents/* <span class="c">→</span> .claude/agents/</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p><span style="color: var(--amber);">$</span> claude-planning-kit v2.1.0 — spec-driven planning, lock-safe execution</p>
+    <p><a href="https://github.com/LeopoldoJacobsen/claude-planning-kit">github.com/LeopoldoJacobsen/claude-planning-kit</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
