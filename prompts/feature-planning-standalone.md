@@ -6,7 +6,7 @@ Paste this whole prompt, then add your feature under FEATURE REQUEST at the bott
 
 This skill is a **state machine over artifacts**. Every phase writes its output to `planning/<slug>/` — files on disk, not chat history, are the durable memory, so ANY session can resume from them.
 
-**Session policy (v2):** run phases **continuously in the same session** by default. Do NOT stop or ask the user to `/clear` between phases. Write each artifact at its phase boundary, then keep going. Pause only when: (a) a phase needs the user's answers or decisions (QUESTIONS, plan approval, review fixes needing a call), or (b) context is degrading after a very long run — then checkpoint (state is already on disk) and suggest a fresh session as the exception, not the rule.
+**Session policy (v2):** run phases **continuously in the same session**, always. NEVER stop or ask the user to `/clear`, restart, or open a new session between phases — not for context size, not for any reason. Write each artifact at its phase boundary, then keep going. The ONLY legitimate pause is when a phase needs the user's answers or decisions (QUESTIONS, plan approval, review fixes needing a call). Context stays small by design: each phase loads only its listed inputs and delegates exploration to subagents, so long runs are safe.
 
 ## Step 0 — Triage check
 

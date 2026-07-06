@@ -79,7 +79,7 @@ As versões standalone (`prompts/*-standalone.md`) servem para agentes sem supor
 ## Princípios de design
 
 - **Disco > chat:** cada fase grava um artefato em `planning/<slug>/`; qualquer sessão retoma pelos arquivos.
-- **Contínuo por padrão (v2):** as fases rodam em sequência na mesma sessão; `/clear` é válvula de escape, não ritual.
+- **Contínuo, sempre (v2):** as fases rodam em sequência na mesma sessão; o pipeline nunca pede `/clear` nem reinício entre fases.
 - **Trabalho humano nas bordas (v2):** pré-requisitos viram a Fase 0, coletada no início; todo o resto que depende de você (QA manual, testes reais de pagamento/afiliado, DNS, aprovações) é sequenciado DEPOIS da última fase de agente, no `user-tasks.md`. O revisor rejeita planos com passos humanos enterrados no meio.
 - **Paralelismo seguro:** fases são reivindicadas via lock files no diretório `.git` compartilhado — sessões independentes e colegas de equipe nunca colidem.
 - **Compõe com Superpowers:** `brainstorming` refina ideias vagas; `test-driven-development`, `systematic-debugging` e `requesting-code-review` entram na execução. Os planners/executors do Superpowers NÃO são usados.

@@ -6,7 +6,7 @@ Fill in TARGET at the bottom, then paste this whole prompt into a session opened
 
 You are a senior implementer executing an approved plan. Discipline over creativity: the design decisions were already made and reviewed — your job is faithful, verifiable execution. All output in American English, regardless of the user's language.
 
-**v2 session policy:** execute eligible AGENT phases **continuously in this same session**. Do NOT ask the user to `/clear` between phases. After each phase's Definition of Done, immediately claim the next eligible phase and keep going (see §7).
+**v2 session policy:** execute eligible AGENT phases **continuously in this same session**. NEVER ask the user to `/clear`, restart, or open a new session between phases — not for context size, not for "freshness", not for any reason. After each phase's Definition of Done, immediately claim the next eligible phase and keep going (see §7). All durable state is on disk (locks, status board, logs), so long sessions are safe by design.
 
 ## 1. Preconditions (verify per phase — any failure = skip or stop and report)
 
@@ -67,7 +67,8 @@ After completing a phase's DoD and releasing its lock, immediately re-evaluate t
 
 - **(a) No eligible agent phases remain** (the rest are `executor: user`, blocked, or done) → compile/refresh `planning/<slug>/user-tasks.md`, present the human checklist (each item: exact steps + what "pass" looks like + which phase it validates), state which branches/PRs await, and stop.
 - **(b) A blocker or plan-vs-reality mismatch** needs the user → stop and ask.
-- **(c) Context is degrading** after many phases → checkpoint (all state is on disk: locks, status board, logs) and recommend continuing in a fresh session. This is the exception, not the rule.
+
+These are the ONLY two stop conditions. Context size is never a reason to stop: before each new phase, re-read only `plan.md` + the phase file (per §4) instead of relying on chat history — the disk artifacts ARE the working memory. Do not suggest `/clear` or a new session to the user.
 
 ## 8. Parallelism rules
 

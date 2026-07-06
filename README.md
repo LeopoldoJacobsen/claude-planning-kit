@@ -79,7 +79,7 @@ The standalone versions (`prompts/*-standalone.md`) are for agents without skill
 ## Design principles
 
 - **Disk > chat:** every phase writes an artifact to `planning/<slug>/`; any session resumes from the files.
-- **Continuous by default (v2):** phases run back-to-back in the same session; `/clear` is a pressure valve, not a ritual.
+- **Continuous, always (v2):** phases run back-to-back in the same session; the pipeline never asks you to `/clear` or restart between phases.
 - **Human work at the edges (v2):** prerequisites become Phase 0, collected up front; everything else that depends on you (manual QA, real payment/affiliate tests, DNS, approvals) is sequenced AFTER the last agent phase, in `user-tasks.md`. The reviewer rejects plans with human steps buried mid-stream.
 - **Safe parallelism:** phases are claimed via lock files in the shared `.git` directory — independent sessions and teammates never collide.
 - **Composes with Superpowers:** `brainstorming` refines vague ideas; `test-driven-development`, `systematic-debugging`, and `requesting-code-review` plug into execution. Superpowers' own planners/executors are NOT used.
