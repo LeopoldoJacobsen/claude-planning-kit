@@ -22,6 +22,11 @@ Skills are namespaced: `/planning-kit:feature-planning`, `/planning-kit:plan-exe
 
 Copy `plugins/planning-kit/skills/*` into `.claude/skills/` and `plugins/planning-kit/agents/*` into `.claude/agents/` (project-level, committed) or into `~/.claude/` (personal, all projects). Append the triage block to `CLAUDE.md`.
 
+## Updating an existing install
+
+- **Marketplace installs:** update automatically; to force it now, run `/plugin marketplace update claude-planning-kit` inside the project.
+- **Vendored installs (bootstrap/manual):** paste `prompts/UPDATE-KIT.md` into Claude Code at the project root — it re-copies the kit's four components, refreshes the triage block, verifies nothing else changed, and commits.
+
 ## Superpowers compatibility rules
 
 Install ONLY: `brainstorming`, `test-driven-development`, `systematic-debugging`, `requesting-code-review` (copy their skill folders). NEVER install `writing-plans`, `executing-plans`, `subagent-driven-development`, or `using-git-worktrees` alongside this kit — two planners/executors fight for triggering. The pipeline invokes brainstorming for vague ideas and blocks its handoff to their planner.
