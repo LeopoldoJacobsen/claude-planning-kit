@@ -3,7 +3,7 @@
   "name": "claude-planning-kit",
   "owner": { "name": "Leopoldo Jacobsen" },
   "description": "Spec-driven planning and continuous lock-safe execution workflow for Claude Code",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "plugins": [
     {
       "name": "planning-kit",

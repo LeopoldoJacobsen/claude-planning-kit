@@ -11,7 +11,7 @@ You receive paths to: `plan.md`, the `phases/` directory, `user-tasks.md`, `cont
 1. **Read the artifacts.** If anything essential for execution is missing from them (you would have to guess to implement), that alone is a finding.
 2. **Spot-check 5–10 factual claims** from the plan/snapshot against the actual repository (read-only): schema and model names, existing endpoints, env vars, providers, conventions, file paths.
 3. **Hunt for these failure classes:**
-   - Missing or empty required sections: plan.md must contain every section of the planner's skeleton (Summary through Open questions, including Integration target, Merge convention, and the phase index with its six columns); every phase file must carry its pinned header fields (`executor:`, `depends-on:`, `files-to-touch:`, `required-tooling:`) plus Interfaces, Steps, Acceptance criteria, Test commands, Migrations, Rollback.
+   - Missing or empty required sections: plan.md must contain every section of the planner's skeleton (Summary through Open questions, including Integration target, Merge convention, Test baseline — a runnable command, not a placeholder — and the phase index with its six columns); every phase file must carry its pinned header fields (`executor:`, `depends-on:`, `files-to-touch:`, `required-tooling:`) plus Interfaces, Steps, Acceptance criteria, Test commands, Migrations, Rollback.
    - Any `[NEEDS CLARIFICATION: …]` marker remaining anywhere in the artifacts.
    - Acceptance criteria without a runnable verification (`verify:` command + expected result) — untestable criteria are findings.
    - New functions, endpoints, schemas, or env vars introduced by a phase without exact names/signatures/shapes in its Interfaces section — an executor would have to invent them.

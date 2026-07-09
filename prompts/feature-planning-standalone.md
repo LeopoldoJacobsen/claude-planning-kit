@@ -21,9 +21,10 @@ If the feature request is a rough idea rather than a defined scope AND a brainst
 ## On start
 
 1. Derive a short slug from the feature request (e.g., `affiliate-system`).
-2. Inspect `planning/<slug>/` and pick the next phase from the state table.
-3. Announce the phase, run it, write **and commit** its artifact, and continue to the next phase in this same session.
-4. The user may override the state table at any time (e.g., "run REVIEW again").
+2. Decide the **integration target** now: the repo's default branch, or `feat/<slug>/integration` when the default branch is protected or the feature is large. Record it as the first line of `context-snapshot.md` (`Integration target: <branch>`); `plan.md` later copies this value instead of defining it.
+3. Inspect `planning/<slug>/` and pick the next phase from the state table.
+4. Announce the phase, run it, write **and commit** its artifact, and continue to the next phase in this same session.
+5. The user may override the state table at any time (e.g., "run REVIEW again").
 
 **State table (first missing artifact wins):**
 
@@ -41,7 +42,7 @@ If the feature request is a rough idea rather than a defined scope AND a brainst
 2. **Never assume.** Anything unverifiable becomes a clarifying question — never a guess. Cite file paths for every claim about the project. If a new ambiguity surfaces during PLANNING, either resolve it from `decisions.md` or mark it inline as `[NEEDS CLARIFICATION: …]` and ask the user in one small batch before REVIEW. A plan containing any remaining marker is not reviewable.
 3. **Context budget:** never dump whole files into the conversation. Read only the sections needed; reference by `path:line`. Artifacts contain compressed findings, not transcripts. Targets: `context-snapshot.md` ≈ 800–1,000 words; `plan.md` overview ≈ 2 pages; every phase file fully self-contained.
 4. **Delegate exploration:** use the `repo-explorer` subagent for discovery (one invocation per area) and the `plan-reviewer` subagent for review. Subagents have their own context window; only their compressed reports enter this session.
-5. **Read-only until execution, but commit the plan:** DISCOVERY through REVIEW must not modify any project file. Only writes allowed: `planning/<slug>/` and, for brand-new projects, the `memory-bank/` scaffold. Commit `planning/<slug>/` at every phase boundary (`plan(<slug>): <phase>`) on the **integration target** branch — these commits touch only `planning/` and are the one exception to never-committing-to-main. If the target branch is protected, use `feat/<slug>/integration` as the integration target instead (record it in `plan.md`). Without these commits, executor worktrees are created WITHOUT the plan.
+5. **Read-only until execution, but commit the plan:** DISCOVERY through REVIEW must not modify any project file. Only writes allowed: `planning/<slug>/` and, for brand-new projects, the `memory-bank/` scaffold. Commit `planning/<slug>/` at every phase boundary (`plan(<slug>): <phase>`) on the **integration target** branch decided at On start — these commits touch only `planning/` and are the one exception to never-committing-to-main. Without these commits, executor worktrees are created WITHOUT the plan.
 6. **Closed scope:** plan exactly the requested feature. Adjacent ideas go under "Out of scope / future work."
 7. **Compose, don't duplicate:** if an installed skill or subagent already covers a procedure, the plan references it instead of restating its content — always by the EXACT name recorded in the snapshot's AVAILABLE TOOLING list (namespaces differ per install: `superpowers:test-driven-development` as a plugin vs `test-driven-development` vendored). Prefer a TDD skill for logic-heavy phases, a systematic-debugging skill for bug-hunting work, and a code-review skill as the pre-merge gate, when installed. Skill bodies are loaded by the executor at execution time, never during planning.
 8. **Project principles are gates:** if `memory-bank/decisions.md`, `memory-bank/architecture.md`, or a `constitution.md` exists, the plan must comply with their recorded decisions or explicitly document the deviation and its reason in `plan.md`. The reviewer checks this.
@@ -86,7 +87,8 @@ Load ONLY the snapshot + decisions (+ design.md if present, plus targeted file c
 ## Security & multi-tenant isolation
 ## Risks & mitigations
 ## Testing & rollout
-## Integration target: <branch>     <!-- default main; feat/<slug>/integration for large features or protected main -->
+## Test baseline                    <!-- exact command(s) that run the full suite + what a pass looks like -->
+## Integration target: <branch>     <!-- copy the value recorded on the first line of context-snapshot.md -->
 ## Merge convention: direct | PR    <!-- from the snapshot (area E); executors follow it without asking -->
 ## Recommended installs (optional)  <!-- ideal-but-missing tooling, as a user decision -->
 ## Phase index                      <!-- doubles as the execution status board -->

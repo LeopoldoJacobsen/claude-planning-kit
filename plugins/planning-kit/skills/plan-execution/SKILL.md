@@ -40,8 +40,9 @@ if ! git push origin "$LOCKSHA:$CLAIM" 2>/dev/null; then
   rm "$LOCK"; echo "Phase N claimed on another machine — pick another eligible phase"; fi
 ```
 
-- **Stale lock (mechanical rule, no user prompt):** a lock (local file or remote claim ref — read the ref's commit message for `started`) is stale when it is >24h old AND its branch has no commits newer than its `started` timestamp. Take it over: reset the phase per §9, remove the lock (`rm "$LOCK"`; delete the ref with `git push origin ":$CLAIM"`), record the takeover in the execution log, and reclaim. Never touch a lock younger than 24h.
-- **Status board edits happen ONLY in the main checkout at the repo root, never inside a phase worktree.** Flip the phase's row in plan.md to `in-progress` + branch name, commit (`plan(<slug>): claim phase N` — it touches only `planning/`) on the integration target, and push if a remote exists. The local lock is the same-machine real-time truth; the claim ref is the cross-machine truth; the committed status board is the durable record — **pull before every claim**.
+- **Inspecting remote claims:** `git pull` does NOT fetch claim refs. To check one: `git ls-remote origin "$CLAIM"` detects presence; `git fetch origin '+refs/claude-locks/*:refs/claude-locks/*'` followed by `git log -1 --format=%B "$CLAIM"` reads its `owner`/`started`. If a claim-ref fetch, push, or delete fails for any reason other than "ref already exists", treat the phase as claimed and move on.
+- **Stale lock (mechanical rule, no user prompt):** a lock (local file or remote claim ref) is stale when it is >24h old AND its branch has been inactive for >24h — last commit older than 24h, or the lock's `started` if the branch has no commits. Take it over: preserve partial work by renaming the abandoned branch (`git branch -m feat/<slug>/phase-N abandoned/<slug>/phase-N-<date>`), remove its leftover worktree if present (`git worktree remove --force <path>`), set the plan.md row back to `pending` with a note, remove the lock (`rm "$LOCK"`), delete the claim ref (`git push origin ":$CLAIM"`), record the takeover in the execution log, then reclaim. Never touch a lock younger than 24h.
+- **Status board edits happen ONLY in the main checkout at the repo root, never inside a phase worktree.** Flip the phase's row in plan.md to `in-progress` + branch name, commit (`plan(<slug>): claim phase N` — it touches only `planning/`) on the integration target, and push if a remote exists. If the status push is rejected (non-fast-forward), run `git pull --rebase`, reapply only your row, and push again; if the rebased board shows the phase is no longer eligible, release the local lock and the claim ref and pick another phase. The local lock is the same-machine real-time truth; the claim ref is the cross-machine truth; the committed status board is the durable record — **pull before every claim**.
 
 ## 3. Isolation
 
@@ -56,7 +57,7 @@ Load `plan.md` fully ONCE per session (overview + index). Per phase, load ONLY: 
 
 ## 5. Execute — step by step
 
-1. **Baseline:** run the existing test suite; record the result in the execution log. Pre-existing unrelated failures: note them, don't fix them, don't count them against yourself later.
+1. **Baseline:** run the plan's **Test baseline** command(s) (pinned in plan.md); record the result in the execution log. Pre-existing unrelated failures: note them, don't fix them, don't count them against yourself later.
 2. Implement the ordered steps **ONE AT A TIME**. After each step: run the relevant tests/build; commit small — `feat(<slug>): phase N step X — <what>`. If the phase names a TDD skill, follow RED-GREEN-REFACTOR strictly.
 3. **Scope fence:** modify ONLY the files listed (plus `planning/<slug>/` and `memory-bank/`, which are always allowed for logs and status). Trivial necessary exceptions (an import, an index/barrel file, a lockfile) are allowed — record each under DEVIATIONS in the log. Anything beyond trivial: stop, flag, wait.
 4. **Plan vs. reality mismatch — tiered:** if a step cannot be executed exactly as written but its intent is unambiguous and the minimal correction preserves the phase's contracts, scope fence, and acceptance criteria (a renamed symbol, a moved file, a drifted line number, superficial signature drift), apply the correction and record it under DEVIATIONS — do not stop. Stop and ask the user, proposing the minimal correction, ONLY when the correction would change an API contract, schema, dependency, acceptance criterion, or security behavior. Never silently redesign.
@@ -66,7 +67,7 @@ Load `plan.md` fully ONCE per session (overview + index). Per phase, load ONLY: 
 ## 6. Definition of done (ALL required per phase)
 
 - [ ] Every acceptance criterion verified — run each criterion's `verify:` command and list it with the result.
-- [ ] Full test suite passes with no new failures vs. baseline.
+- [ ] The plan's **Test baseline** passes with no new failures vs. the recorded baseline.
 - [ ] One line appended to `memory-bank/changelog.md` (append only — no need to re-read the file).
 - [ ] Execution log written: `planning/<slug>/execution/phase-N-log.md` (steps, DEVIATIONS, decisions, follow-ups).
 - [ ] Clean history pushed; branch integrated per the plan's **Merge convention**: `direct` → merge into the integration target and set the row to `done`; `PR` → open the PR and set the row to `awaiting-merge` (NOT `done` — dependents stay blocked until the merge lands; say so in your summary). `done` strictly means merged.

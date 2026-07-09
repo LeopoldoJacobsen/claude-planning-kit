@@ -42,7 +42,8 @@ done
 ## Step 5 — Commit
 
 ```bash
-git checkout -b chore/claude-planning-kit 2>/dev/null || true
+git switch chore/claude-planning-kit 2>/dev/null || git switch -c chore/claude-planning-kit
+[ "$(git branch --show-current)" = "chore/claude-planning-kit" ] || { echo "not on chore/claude-planning-kit — stop and report"; }
 git add .claude CLAUDE.md
 git commit -m "chore: install claude-planning-kit v2 + selected Superpowers skills"
 ```

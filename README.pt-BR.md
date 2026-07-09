@@ -56,7 +56,7 @@ Detalhes completos das três opções em [INSTALL.md](INSTALL.md).
 | **LIGHT** | 3–10 arquivos, lógica moderada | Mini-plano de 5–10 linhas no chat; você dá o "go" |
 | **FULL** | Feature nova, schema de banco, contratos de API, env vars, auth, pagamentos, multi-tenant | Pipeline completo abaixo |
 
-3. **No pipeline FULL:** ideia vaga passa primeiro pelo brainstorming. Depois o Claude explora o repositório (discovery), faz **um lote único de perguntas** — a única pausa antes da aprovação —, escreve o plano dividido em fases e um revisor independente com contexto limpo valida tudo.
+3. **No pipeline FULL:** ideia vaga passa primeiro pelo brainstorming. Depois o Claude explora o repositório (discovery), faz **um lote único de perguntas** — normalmente a única pausa antes da aprovação (o review pode adicionar mais uma se algum achado exigir decisão de produto) —, escreve o plano dividido em fases e um revisor independente com contexto limpo valida tudo.
 4. **Você aprova o plano e confirma os pré-requisitos da Fase 0** (chaves de API, contas, decisões de produto) — coletados uma única vez, no início.
 5. **Execução contínua:** o Claude executa todas as fases de agente em sequência (sessões paralelas são bem-vindas; locks evitam colisão) e termina entregando o `user-tasks.md` — sua lista de testes manuais, validações e aprovações, agrupada no final para nunca travar os agentes.
 6. **Executar ou retomar depois:** em qualquer sessão nova, diga "continue o plano" ou "execute o plano do sistema-de-afiliados" — ou simplesmente cite a pasta `planning/<slug>/`. O estado vive em disco, então a execução retoma exatamente de onde parou, mesmo dias depois ou na máquina de um colega.
