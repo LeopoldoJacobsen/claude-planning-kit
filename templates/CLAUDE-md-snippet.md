@@ -8,8 +8,8 @@ Paste the block below into each repository's `CLAUDE.md` (create the file at the
 
 Before executing any request, classify it and state the classification in one line:
 
-- **DIRECT** — typo/copy fixes, config tweaks, or an isolated bug fix touching ≤2 files, with NO changes to database schema, API contracts, environment variables, auth/permissions, or payments → just do it.
-- **LIGHT PLAN** — 3–10 files or moderate logic changes, still no schema/contract/env/auth/payment impact → write a 5–10 line mini-plan in chat, wait for a "go", then execute in this session.
-- **FULL PIPELINE** — new features, new projects, or anything touching database schema, API contracts consumed by other repos, environment variables, auth/permissions, payments, multi-tenancy, or estimated at more than one session → use the `feature-planning` skill and follow its state machine exactly. If the request is still a vague idea rather than a defined scope, run `superpowers:brainstorming` first (when installed); its approved design doc becomes the feature request.
+- **DIRECT** — typo/copy fixes, config tweaks, or an isolated bug fix touching ≤2 files, with NO changes to database schema, API contracts, environment variables, auth/permissions, payments, multi-tenancy, or other repositories → just do it.
+- **LIGHT PLAN** — 3–10 files or moderate logic changes, still no schema/contract/env/auth/payment/multi-tenancy/cross-repo impact → write a 5–10 line mini-plan in chat, wait for a "go", then execute in this session.
+- **FULL PIPELINE** — new features, new projects, or anything touching database schema, API contracts consumed by other repos, environment variables, auth/permissions, payments, multi-tenancy, more than ~10 files, or estimated at more than one session → use the `feature-planning` skill and follow its state machine exactly. If the request is still a vague idea rather than a defined scope, run the brainstorming skill first (when installed, under whichever name your install uses); its approved design doc becomes the feature request.
 
 When in doubt between two levels, choose the higher one. If a task classified as DIRECT or LIGHT PLAN grows mid-execution (new files, schema, or contracts appear), stop and re-classify upward.

@@ -261,7 +261,7 @@
       <a href="#start">get started</a>
       <a href="#does">does / doesn't</a>
       <a href="https://github.com/LeopoldoJacobsen/claude-planning-kit">github ↗</a>
-      <span class="badge">v2.1.0</span>
+      <span class="badge">v2.2.0</span>
     </div>
   </div>
 </header>
@@ -290,7 +290,7 @@
         <div class="concept">
           <span class="num">№ 1 — DISK OVER CHAT</span>
           <h3>Every phase writes a file</h3>
-          <p>Each phase produces an artifact in <code>planning/&lt;slug&gt;/</code> — snapshot, decisions, plan, review, execution logs. Chat history is disposable; any session (or any teammate) resumes exactly where the last one stopped by reading the files.</p>
+          <p>Each phase produces an artifact in <code>planning/&lt;slug&gt;/</code> — snapshot, decisions, plan, review, execution logs — and commits it. Chat history is disposable; any session (or any teammate) resumes exactly where the last one stopped by reading the files.</p>
         </div>
         <div class="concept">
           <span class="num">№ 2 — RIGHT-SIZED PROCESS</span>
@@ -340,7 +340,7 @@
       <div class="rail">
         <div class="station">
           <div class="station-head"><h3>Brainstorm</h3><span class="chip opt">optional</span><span class="chip agent">agent</span></div>
-          <p>Only when the idea is still vague. <code>superpowers:brainstorming</code> refines it into a design doc, which becomes the official feature request. Its handoff to Superpowers' own planner is deliberately blocked — this pipeline owns planning.</p>
+          <p>Only when the idea is still vague. The brainstorming skill refines it into a design doc, which becomes the official feature request. Its handoff to Superpowers' own planner is deliberately blocked — this pipeline owns planning.</p>
           <span class="artifact">planning/&lt;slug&gt;/design.md</span>
         </div>
         <div class="station">
@@ -355,22 +355,22 @@
         </div>
         <div class="station">
           <div class="station-head"><h3>Planning</h3><span class="chip agent">agent</span></div>
-          <p>A two-page overview plus one self-contained file per phase: exact files to touch, ordered steps, acceptance criteria, test commands, rollback note. Every phase is tagged <code>executor: agent</code> or <code>executor: user</code> — and user phases are pushed to the edges by rule.</p>
+          <p>A two-page overview plus one self-contained file per phase, filled from literal templates: exact files to touch, pinned interfaces and signatures, ordered steps, acceptance criteria with a runnable verify command each, test commands, rollback note. Every phase is tagged <code>executor: agent</code> or <code>executor: user</code> — and user phases are pushed to the edges by rule.</p>
           <span class="artifact">plan.md&nbsp;&nbsp;+&nbsp;&nbsp;phases/phase-N.md&nbsp;&nbsp;+&nbsp;&nbsp;user-tasks.md</span>
         </div>
         <div class="station is-loop">
           <div class="station-head"><h3>Independent review</h3><span class="chip sub">subagent</span></div>
           <p>The <code>plan-reviewer</code> reads only the artifacts — fresh context, zero conversation history — spot-checks 5–10 factual claims against the actual repository, and hunts for breaking contract changes, missing migrations, tenant-isolation holes, buried user steps, and undocumented divergence from the brainstorm's design doc.</p>
           <span class="artifact">planning/&lt;slug&gt;/plan-review.md</span>
-          <div class="loopback">verdict: CHANGES REQUIRED → plan is fixed and re-reviewed, in a loop, until APPROVED</div>
+          <div class="loopback">verdict: CHANGES REQUIRED → plan is fixed and re-reviewed, up to 3 rounds, until APPROVED — then remaining findings become your decisions</div>
         </div>
         <div class="station is-user">
           <div class="station-head"><h3>Approval &amp; prerequisites</h3><span class="chip you">you — pause nº 2</span></div>
-          <p>You approve the reviewed plan and confirm the Phase 0 checklist: API keys, accounts, product decisions. Collected once, up front — never scattered mid-plan.</p>
+          <p>You approve the reviewed plan and confirm the Phase 0 checklist: API keys, accounts, product decisions. Collected once, up front, and recorded on disk — no later session ever re-asks.</p>
         </div>
         <div class="station">
           <div class="station-head"><h3>Continuous execution</h3><span class="chip agent">agent</span></div>
-          <p>All agent phases run back-to-back in one session. Each phase is claimed via a lock file in the shared <code>.git</code> directory (parallel sessions and teammates never collide), runs on its own branch or worktree, commits step by step, respects a scope fence, and must pass a strict definition of done — tests green, changelog updated, log written, branch merged.</p>
+          <p>All agent phases run back-to-back in one session. Each phase is claimed via a local lock file plus an atomic claim ref pushed to the remote (parallel sessions and teammates never claim the same phase — even across machines), runs on its own branch or worktree, commits step by step, respects a scope fence, and must pass a strict definition of done — tests green, changelog updated, log written, branch merged.</p>
           <span class="artifact">planning/&lt;slug&gt;/execution/phase-N-log.md</span>
         </div>
         <div class="station is-user">
@@ -431,7 +431,7 @@
         <div>
           <ol class="steps">
             <li><strong>Just describe the change.</strong> The triage block in <code>CLAUDE.md</code> is always loaded: it classifies every request and states the tier in one line. FULL-tier requests trigger the <code>feature-planning</code> skill on their own — you never have to say "plan".</li>
-            <li><strong>Vague idea?</strong> The pipeline runs <code>superpowers:brainstorming</code> first, turns it into a design doc, and continues into discovery from there.</li>
+            <li><strong>Vague idea?</strong> The pipeline runs the brainstorming skill first, turns it into a design doc, and continues into discovery from there.</li>
             <li><strong>Executing and resuming:</strong> say "execute the plan", "continue the plan", "run the next phases" — or reference any <code>planning/&lt;slug&gt;/</code> folder — and the <code>plan-execution</code> skill picks up from the artifacts on disk. Works in any session, days later, even from a teammate's machine.</li>
           </ol>
           <pre class="term"><span class="pr">›</span> add an affiliate system with 10% commission
@@ -474,10 +474,10 @@ plugins/planning-kit/agents/* <span class="c">→</span> .claude/agents/
           </div>
           <ul>
             <li><strong>Right-sizes the process</strong>Trivial requests are executed directly; only risky work pays for the full pipeline.</li>
-            <li><strong>Persists everything to disk</strong>Every phase writes an artifact to <code>planning/&lt;slug&gt;/</code>; any session resumes from files alone.</li>
+            <li><strong>Persists everything to disk</strong>Every phase writes an artifact to <code>planning/&lt;slug&gt;/</code> and commits it; any session resumes from files alone.</li>
             <li><strong>Cites evidence for every claim</strong>Discovery findings carry file paths; anything unverifiable becomes a question, never an assumption.</li>
             <li><strong>Fact-checks its own plan</strong>An independent reviewer validates the plan against the real codebase and the approved design doc before any code is written.</li>
-            <li><strong>Executes continuously and in parallel</strong>Lock files arbitrate between simultaneous sessions; phases run on isolated branches with step-by-step commits.</li>
+            <li><strong>Executes continuously and in parallel</strong>Local locks plus pushed claim refs arbitrate between simultaneous sessions — even on different machines; phases run on isolated branches with step-by-step commits.</li>
             <li><strong>Batches your work at the edges</strong>Phase 0 prerequisites up front, one human checklist at the end — agents are never blocked mid-stream.</li>
             <li><strong>Composes with Superpowers</strong>Uses exactly four of its skills: brainstorming, test-driven-development, systematic-debugging, requesting-code-review.</li>
             <li><strong>Auto-updates</strong>Installed as a plugin marketplace; skill improvements propagate to every project on the next update.</li>
@@ -493,7 +493,7 @@ plugins/planning-kit/agents/* <span class="c">→</span> .claude/agents/
             <li><strong>Guess</strong>No unverifiable claim survives planning. If the repo can't prove it, it becomes a clarifying question.</li>
             <li><strong>Touch project files during planning</strong>Discovery through review is strictly read-only. Code changes only begin after your approval.</li>
             <li><strong>Execute human work</strong>Real payment tests, DNS changes, third-party approvals, visual QA — it never claims a user phase; it sequences them for you.</li>
-            <li><strong>Silently redesign</strong>If a step can't be executed as written, it stops, records the mismatch, and asks — proposing the minimal correction.</li>
+            <li><strong>Silently redesign</strong>Trivial drift (a renamed symbol, a moved file) is corrected and logged as a deviation without stopping; anything that would change a contract, schema, or acceptance criterion stops and asks — proposing the minimal correction.</li>
             <li><strong>Work directly on main</strong>Every phase runs on its own branch or worktree, and the integration branch is never left red.</li>
             <li><strong>Depend on chat history</strong>No <code>/clear</code> rituals, no "remember earlier". State lives on disk, sessions are replaceable.</li>
             <li><strong>Tolerate competing planners</strong>Superpowers' <code>writing-plans</code>, <code>executing-plans</code>, <code>subagent-driven-development</code> and <code>using-git-worktrees</code> are explicitly excluded — two planners fighting for the same trigger is worse than one.</li>
@@ -507,7 +507,7 @@ plugins/planning-kit/agents/* <span class="c">→</span> .claude/agents/
 
 <footer>
   <div class="wrap foot">
-    <p><span style="color: var(--amber);">$</span> claude-planning-kit v2.1.0 — spec-driven planning, lock-safe execution</p>
+    <p><span style="color: var(--amber);">$</span> claude-planning-kit v2.2.0 — spec-driven planning, lock-safe execution</p>
     <p><a href="https://github.com/LeopoldoJacobsen/claude-planning-kit">github.com/LeopoldoJacobsen/claude-planning-kit</a></p>
   </div>
 </footer>

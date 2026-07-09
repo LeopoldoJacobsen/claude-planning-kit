@@ -16,7 +16,7 @@ Both install the kit, wire the CLAUDE.md triage router, cherry-pick the four com
 /plugin install planning-kit@claude-planning-kit
 ```
 
-Skills are namespaced: `/planning-kit:feature-planning`, `/planning-kit:plan-execution`. Still add the triage block from `templates/CLAUDE-md-snippet.md` to each repo's `CLAUDE.md`, and cherry-pick the Superpowers skills per the bootstrap prompt's Step 3.
+Skills are namespaced: `/planning-kit:feature-planning`, `/planning-kit:plan-execution`. Still add the triage block from `templates/CLAUDE-md-snippet.md` to each repo's `CLAUDE.md`, and cherry-pick the Superpowers skills per the bootstrap prompt's Superpowers step (Step 3 in the existing-project prompt, Step 5 in the new-project prompt).
 
 ## 3. Manual copy
 

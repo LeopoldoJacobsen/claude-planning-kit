@@ -11,18 +11,22 @@ You receive paths to: `plan.md`, the `phases/` directory, `user-tasks.md`, `cont
 1. **Read the artifacts.** If anything essential for execution is missing from them (you would have to guess to implement), that alone is a finding.
 2. **Spot-check 5–10 factual claims** from the plan/snapshot against the actual repository (read-only): schema and model names, existing endpoints, env vars, providers, conventions, file paths.
 3. **Hunt for these failure classes:**
-   - Conflicts with existing features, data, or conventions.
+   - Missing or empty required sections: plan.md must contain every section of the planner's skeleton (Summary through Open questions, including Integration target, Merge convention, and the phase index with its six columns); every phase file must carry its pinned header fields (`executor:`, `depends-on:`, `files-to-touch:`, `required-tooling:`) plus Interfaces, Steps, Acceptance criteria, Test commands, Migrations, Rollback.
+   - Any `[NEEDS CLARIFICATION: …]` marker remaining anywhere in the artifacts.
+   - Acceptance criteria without a runnable verification (`verify:` command + expected result) — untestable criteria are findings.
+   - New functions, endpoints, schemas, or env vars introduced by a phase without exact names/signatures/shapes in its Interfaces section — an executor would have to invent them.
+   - Conflicts with existing features, data, or conventions, including decisions recorded in `memory-bank/` docs.
    - Breaking changes to contracts consumed by other repositories (APIs, SDKs, shared schemas) without a migration/versioning path.
    - Missing migrations, environment variables, or permission checks.
    - Multi-tenant isolation holes (data leaking across tenants/stores).
    - Divergence from the approved design doc (`design.md`, when provided): requirements or decisions from the brainstorm that the plan drops, contradicts, or silently redesigns without documenting the change and its reason in `plan.md`.
    - Wrong phase ordering or hidden dependencies between phases.
    - Any step an executor could not perform exactly as written.
-   - References to tooling (skills, subagents, MCP servers) that do not exist in the snapshot's AVAILABLE TOOLING list or on disk.
+   - References to tooling (skills, subagents, MCP servers) whose names do not match the snapshot's AVAILABLE TOOLING list verbatim or do not exist on disk.
    - User-dependent work buried mid-plan: any `executor: user` phase sequenced before the final block (other than a consolidated Phase 0 — User Prerequisites), any agent phase depending on a user phase, or user prerequisites scattered across phases instead of collected up front. These block parallel agents and MUST be re-sequenced or redesigned (mock/stub/test-mode) — reject the plan.
 4. **Do not redo discovery.** Targeted verification only — your context must stay small.
 
-Return this report (the caller will save it verbatim as `plan-review.md`):
+Return this report (the caller will save it verbatim as `plan-review.md`; the `VERDICT:` line MUST be the first line):
 
 ```
 VERDICT: APPROVED | CHANGES REQUIRED

@@ -72,16 +72,17 @@ plugins/planning-kit/
   agents/plan-reviewer.md          # adversarial plan reviewer with a clean context
 templates/CLAUDE-md-snippet.md     # 3-tier triage router for each repo's CLAUDE.md
 prompts/                           # bootstrap prompts (new/existing project) + standalone versions
+scripts/sync-standalone.sh         # regenerates the standalone prompts from the skill bodies
 ```
 
 The standalone versions (`prompts/*-standalone.md`) are for agents without skill support: paste the whole prompt into the session and the pipeline runs the same way.
 
 ## Design principles
 
-- **Disk > chat:** every phase writes an artifact to `planning/<slug>/`; any session resumes from the files.
+- **Disk > chat:** every phase writes an artifact to `planning/<slug>/` and commits it; any session (or teammate) resumes from the files.
 - **Continuous, always (v2):** phases run back-to-back in the same session; the pipeline never asks you to `/clear` or restart between phases.
 - **Human work at the edges (v2):** prerequisites become Phase 0, collected up front; everything else that depends on you (manual QA, real payment/affiliate tests, DNS, approvals) is sequenced AFTER the last agent phase, in `user-tasks.md`. The reviewer rejects plans with human steps buried mid-stream.
-- **Safe parallelism:** phases are claimed via lock files in the shared `.git` directory — independent sessions and teammates never collide.
+- **Safe parallelism:** phases are claimed via lock files in the clone's shared `.git` directory (same machine) plus an atomic claim ref pushed to the remote (`refs/claude-locks/…`) — parallel sessions and teammates on other machines never claim the same phase. The committed status board in `plan.md` is the durable record.
 - **Composes with Superpowers:** `brainstorming` refines vague ideas; `test-driven-development`, `systematic-debugging`, and `requesting-code-review` plug into execution. Superpowers' own planners/executors are NOT used.
 
 ## Superpowers compatibility
@@ -90,4 +91,4 @@ Install ONLY these skills: `brainstorming`, `test-driven-development`, `systemat
 
 ## Improving the kit
 
-Treat skill text like code. After each real feature: read the execution logs in `planning/<slug>/execution/`, fold recurring deviations into the skills, bump the version in both manifests (`plugin.json` and `marketplace.json`), commit, and push. Projects installed via the marketplace pick up the update automatically; vendored copies re-run the bootstrap prompt.
+Treat skill text like code. After each real feature: read the execution logs in `planning/<slug>/execution/`, fold recurring deviations into the skills, run `scripts/sync-standalone.sh` to regenerate the standalone prompts (they are generated copies of the skill bodies — never edit them by hand), bump the version in both manifests (`plugin.json` and `marketplace.json`), commit, and push. Projects installed via the marketplace pick up the update automatically; vendored copies re-run the bootstrap prompt.

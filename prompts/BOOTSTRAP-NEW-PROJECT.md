@@ -46,7 +46,7 @@ done
 
 ## Step 6 — Verify and commit
 
-1. Confirm: `.claude/skills/feature-planning/`, `.claude/skills/plan-execution/`, both agents, the four Superpowers skills, `CLAUDE.md` with the triage block, and `memory-bank/` with five files. Show a short tree as proof.
+1. Confirm: `.claude/skills/feature-planning/`, `.claude/skills/plan-execution/`, both agents, the four Superpowers skills, `CLAUDE.md` with the triage block, and `memory-bank/` with five files. If any Superpowers skill is missing, name it explicitly in the final report. Show a short tree as proof.
 2. Commit:
 
 ```bash
@@ -58,4 +58,4 @@ Clean up `/tmp/cpk` and `/tmp/sp`.
 
 ## Step 7 — Report and hand off
 
-Summarize what was created, then tell the user exactly this: "The project is ready. Describe your first feature in plain language — Portuguese or English. If it's still a vague idea, I'll run brainstorming first and turn it into a design doc; if it's already a defined scope, the planning pipeline starts at discovery. Either way: plan → independent review → your approval → continuous execution, ending with your personal checklist of tests and inputs." Then stop — do not begin planning in this session.
+Summarize what was created, then tell the user exactly this: "The project is ready. Describe your first feature in plain language — any language works. If it's still a vague idea, I'll run brainstorming first and turn it into a design doc; if it's already a defined scope, the planning pipeline starts at discovery. Either way: plan → independent review → your approval → continuous execution, ending with your personal checklist of tests and inputs." Then stop — do not begin planning in this session.

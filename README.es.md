@@ -78,10 +78,10 @@ Las versiones standalone (`prompts/*-standalone.md`) sirven para agentes sin sop
 
 ## Principios de diseño
 
-- **Disco > chat:** cada fase graba un artefacto en `planning/<slug>/`; cualquier sesión retoma desde los archivos.
+- **Disco > chat:** cada fase graba un artefacto en `planning/<slug>/` y lo commitea; cualquier sesión (o compañero) retoma desde los archivos.
 - **Continuo, siempre (v2):** las fases corren en secuencia en la misma sesión; el pipeline nunca pide `/clear` ni reiniciar entre fases.
 - **Trabajo humano en los bordes (v2):** los prerrequisitos se vuelven la Fase 0, recolectada al inicio; todo lo demás que depende de ti (QA manual, pruebas reales de pago/afiliado, DNS, aprobaciones) se secuencia DESPUÉS de la última fase de agente, en `user-tasks.md`. El revisor rechaza planes con pasos humanos enterrados a mitad de camino.
-- **Paralelismo seguro:** las fases se reclaman vía lock files en el directorio `.git` compartido — sesiones independientes y compañeros de equipo nunca colisionan.
+- **Paralelismo seguro:** las fases se reclaman vía lock files en el directorio `.git` del clon (misma máquina) más un claim ref atómico enviado al remoto (`refs/claude-locks/…`) — sesiones paralelas y compañeros en otras máquinas nunca reclaman la misma fase. El status board commiteado en `plan.md` es el registro durable.
 - **Compone con Superpowers:** `brainstorming` refina ideas vagas; `test-driven-development`, `systematic-debugging` y `requesting-code-review` entran en la ejecución. Los planners/executors de Superpowers NO se usan.
 
 ## Compatibilidad con Superpowers
@@ -90,4 +90,4 @@ Instala SOLAMENTE estas skills: `brainstorming`, `test-driven-development`, `sys
 
 ## Mejorando el kit
 
-Trata el texto de las skills como código. Después de cada feature real: lee los logs de ejecución en `planning/<slug>/execution/`, incorpora las desviaciones recurrentes a las skills, sube la versión en los dos manifiestos (`plugin.json` y `marketplace.json`), haz commit y push. Los proyectos instalados vía marketplace reciben la actualización automáticamente; las copias vendored vuelven a ejecutar el prompt de bootstrap.
+Trata el texto de las skills como código. Después de cada feature real: lee los logs de ejecución en `planning/<slug>/execution/`, incorpora las desviaciones recurrentes a las skills, corre `scripts/sync-standalone.sh` para regenerar los prompts standalone (son copias generadas de los cuerpos de las skills — nunca los edites a mano), sube la versión en los dos manifiestos (`plugin.json` y `marketplace.json`), haz commit y push. Los proyectos instalados vía marketplace reciben la actualización automáticamente; las copias vendored vuelven a ejecutar el prompt de bootstrap.

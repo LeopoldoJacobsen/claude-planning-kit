@@ -35,8 +35,9 @@ done
 ## Step 4 — Verify
 
 1. Confirm these exist: `.claude/skills/feature-planning/SKILL.md`, `.claude/skills/plan-execution/SKILL.md`, `.claude/agents/repo-explorer.md`, `.claude/agents/plan-reviewer.md`, the four Superpowers skill folders, and the Task Triage block inside `CLAUDE.md`.
-2. Confirm no competing planner skills were copied.
-3. Show a short tree of `.claude/` as proof.
+2. If any of the four Superpowers skills is missing, name it explicitly in the final report (the kit degrades gracefully — plans only reference tooling that actually exists — but the user should know).
+3. Confirm no competing planner skills were copied.
+4. Show a short tree of `.claude/` as proof.
 
 ## Step 5 — Commit
 
