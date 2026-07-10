@@ -10,12 +10,15 @@ You are setting up this repository to use the **claude-planning-kit** workflow (
 
 ```bash
 git clone --depth 1 https://github.com/LeopoldoJacobsen/claude-planning-kit /tmp/cpk
-mkdir -p .claude/skills .claude/agents
+mkdir -p .claude/skills .claude/agents .cursor/agents .cursor/rules .cursor/commands
 cp -r /tmp/cpk/plugins/planning-kit/skills/. .claude/skills/
 cp -r /tmp/cpk/plugins/planning-kit/agents/. .claude/agents/
+cp -r /tmp/cpk/templates/cursor/agents/. .cursor/agents/
+cp /tmp/cpk/templates/cursor/planning-kit.mdc .cursor/rules/planning-kit.mdc
+cp /tmp/cpk/templates/cursor/commands/multi-model-review.md .cursor/commands/multi-model-review.md
 ```
 
-(Note for the human: if you prefer auto-updates over a vendored copy, run `/plugin marketplace add LeopoldoJacobsen/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself instead of Step 1 — skills then live under the `/planning-kit:` namespace.)
+(Note for the human: if you prefer auto-updates over a vendored copy, run `/plugin marketplace add LeopoldoJacobsen/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself instead of Step 1 — skills then live under the `/planning-kit:` namespace. Still copy `templates/cursor/agents/` + the command for Cursor model pins.)
 
 ## Step 2 — Wire the triage router into CLAUDE.md
 
@@ -34,22 +37,22 @@ done
 
 ## Step 4 — Verify
 
-1. Confirm these exist: `.claude/skills/feature-planning/SKILL.md`, `.claude/skills/plan-execution/SKILL.md`, `.claude/agents/repo-explorer.md`, `.claude/agents/plan-reviewer.md`, the four Superpowers skill folders, and the Task Triage block inside `CLAUDE.md`.
+1. Confirm the two skills, all six planning-kit agents in `.claude/agents/`, the six Cursor agent templates in `.cursor/agents/` (pinned to gpt-5.6-sol-max-fast / grok-4.5-fast-xhigh / claude-fable-5-thinking-max), `.cursor/rules/planning-kit.mdc`, `.cursor/commands/multi-model-review.md`, the four Superpowers skill folders, and the Task Triage block inside `CLAUDE.md`.
 2. If any of the four Superpowers skills is missing, name it explicitly in the final report (the kit degrades gracefully — plans only reference tooling that actually exists — but the user should know).
 3. Confirm no competing planner skills were copied.
-4. Show a short tree of `.claude/` as proof.
+4. Show a short tree of `.claude/` and `.cursor/` as proof.
 
 ## Step 5 — Commit
 
 ```bash
 git switch chore/claude-planning-kit 2>/dev/null || git switch -c chore/claude-planning-kit
 [ "$(git branch --show-current)" = "chore/claude-planning-kit" ] || { echo "not on chore/claude-planning-kit — stop and report"; }
-git add .claude CLAUDE.md
-git commit -m "chore: install claude-planning-kit v2 + selected Superpowers skills"
+git add .claude .cursor/agents .cursor/rules/planning-kit.mdc .cursor/commands/multi-model-review.md CLAUDE.md
+git commit -m "chore: install planning-kit v2.4 + multi-model peer review"
 ```
 
 Tell the user the branch name so they can merge it, and clean up `/tmp/cpk` and `/tmp/sp`.
 
 ## Step 6 — Report and hand off
 
-Summarize what was installed and explain the day-to-day flow in 5 lines: describe a feature normally → triage classifies it → vague ideas go through brainstorming first → the pipeline runs discovery → questions → plan → review continuously in one session → after approval, execution runs all agent phases back-to-back and ends with the `user-tasks.md` human checklist. Then stop — do not begin planning any feature in this session.
+Summarize what was installed and explain: triage → discovery/questions → role matrix → GPT/Grok/Fable council → plan → persistent cross-family review → phased execution → peer diff review → human checklist. Tell Cursor users: agents are already pinned to `gpt-5.6-sol-max-fast`, `grok-4.5-fast-xhigh`, and `claude-fable-5-thinking-max`; use `/multi-model-review` anytime for a three-model adversarial pass. Claude Code–only installs will mark FULL reviews DEGRADED (expected). Then stop.

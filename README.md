@@ -6,11 +6,11 @@ A planning and execution kit for Claude Code. It works as a reusable "starter pr
 
 > **Visual overview:** [leopoldojacobsen.github.io/claude-planning-kit](https://leopoldojacobsen.github.io/claude-planning-kit/) — how it works, the full workflow, and what it does / doesn't do, on a single page.
 
-**The full loop:**
+**The full loop (v2.4):**
 
 ```
-triage → (brainstorm if the idea is vague) → discovery → questions → plan
-      → independent review → continuous execution → final human checklist
+triage → (brainstorm) → discovery → questions → role matrix → parallel design council → synthesis
+      → plan → persistent cross-family review (+ review log) → execution → peer diff review → human checklist
 ```
 
 Everything becomes a file in `planning/<slug>/` — any session resumes from where it stopped, without depending on chat history.
@@ -67,12 +67,17 @@ Full details for all three options in [INSTALL.md](INSTALL.md).
 .claude-plugin/marketplace.json    # marketplace manifest (enables /plugin marketplace add)
 plugins/planning-kit/
   skills/feature-planning/         # planning state machine (artifacts in planning/<slug>/)
-  skills/plan-execution/           # continuous executor: locks, worktrees, scope fence, definition of done
-  agents/repo-explorer.md          # read-only discovery subagent (own context window)
-  agents/plan-reviewer.md          # adversarial plan reviewer with a clean context
+  skills/plan-execution/           # continuous executor: locks, worktrees, scope fence, peer review
+  agents/                          # Claude-neutral agent prompts (model-agnostic)
+templates/cursor/
+  planning-kit.mdc                 # always-on Cursor rule (triage + peer-review gates)
+  agents/                          # Cursor agents pinned to GPT / Grok / Fable
+  commands/multi-model-review.md   # /multi-model-review — three-model adversarial review
 templates/CLAUDE-md-snippet.md     # 3-tier triage router for each repo's CLAUDE.md
 prompts/                           # bootstrap prompts (new/existing project) + standalone versions
 scripts/sync-standalone.sh         # regenerates the standalone prompts from the skill bodies
+docs/CURSOR.md                     # multi-model Cursor install + orchestration protocol
+docs/COMPARISON-GRILL-ME-CODEX.md  # strategy comparison vs grill-me-codex
 ```
 
 The standalone versions (`prompts/*-standalone.md`) are for agents without skill support: paste the whole prompt into the session and the pipeline runs the same way.
@@ -84,6 +89,12 @@ The standalone versions (`prompts/*-standalone.md`) are for agents without skill
 - **Human work at the edges (v2):** prerequisites become Phase 0, collected up front; everything else that depends on you (manual QA, real payment/affiliate tests, DNS, approvals) is sequenced AFTER the last agent phase, in `user-tasks.md`. The reviewer rejects plans with human steps buried mid-stream.
 - **Safe parallelism:** phases are claimed via lock files in the clone's shared `.git` directory (same machine) plus an atomic claim ref pushed to the remote (`refs/claude-locks/…`) — parallel sessions and teammates on other machines never claim the same phase. The committed status board in `plan.md` is the durable record.
 - **Composes with Superpowers:** `brainstorming` refines vague ideas; `test-driven-development`, `systematic-debugging`, and `requesting-code-review` plug into execution. Superpowers' own planners/executors are NOT used.
+- **No self-grading (v2.4):** three independent council roles challenge the design; a persistent plan critic from a different model family gates the plan (append-only review log; resume on REVISE); a different agent/model reviews every implementation phase before merge. Same-family review is marked DEGRADED and cannot authorize code without a human override on disk. Orchestrator-stamped model assignments are the source of truth.
+- **Cursor-native option (v2.4):** installable `.cursor` rule, agents pinned to `gpt-5.6-sol-max-fast` / `grok-4.5-fast-xhigh` / `claude-fable-5-thinking-max`, and `/multi-model-review` for three-model adversarial reviews via Cursor CLI or chat. See [`docs/CURSOR.md`](docs/CURSOR.md).
+
+## Comparison with grill-me-codex
+
+The detailed, commit-pinned comparison and adopted design decisions are in [`docs/COMPARISON-GRILL-ME-CODEX.md`](docs/COMPARISON-GRILL-ME-CODEX.md).
 
 ## Superpowers compatibility
 

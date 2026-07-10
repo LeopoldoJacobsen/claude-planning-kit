@@ -1,13 +1,42 @@
 # Install Guide
 
-Three ways to install, from most to least automated.
+Three ways to install in Claude Code, plus Cursor support.
+
+## Cursor (pinned Fable / GPT / Grok) — multi-model peer review
+
+From the **consumer repository root**:
+
+```bash
+git clone --depth 1 https://github.com/LeopoldoJacobsen/claude-planning-kit /tmp/cpk
+mkdir -p .claude/skills .claude/agents .cursor/rules .cursor/agents .cursor/commands
+cp -R /tmp/cpk/plugins/planning-kit/skills/. .claude/skills/
+cp -R /tmp/cpk/plugins/planning-kit/agents/. .claude/agents/
+cp -R /tmp/cpk/templates/cursor/agents/. .cursor/agents/
+cp /tmp/cpk/templates/cursor/planning-kit.mdc .cursor/rules/planning-kit.mdc
+cp /tmp/cpk/templates/cursor/commands/multi-model-review.md .cursor/commands/multi-model-review.md
+rm -rf /tmp/cpk
+```
+
+Defaults already pinned:
+
+| Agent | Model |
+|---|---|
+| architecture-council | `gpt-5.6-sol-max-fast` |
+| failure-council | `grok-4.5-fast-xhigh` |
+| simplicity-council | `claude-fable-5-thinking-max` |
+| plan-reviewer | `gpt-5.6-sol-max-fast` |
+| implementation-reviewer | `grok-4.5-fast-xhigh` |
+
+Use `/multi-model-review` in Cursor chat or CLI for an ad-hoc three-model adversarial review of any diff. Details: [`docs/CURSOR.md`](docs/CURSOR.md).
+
+**Claude Code–only installs** cannot pin cross-family reviewers — FULL plans will correctly mark DEGRADED and need a per-plan human override. That is honesty, not a bug.
 
 ## 1. Bootstrap prompts (recommended — Claude does everything)
 
 - **Existing repo:** paste `prompts/BOOTSTRAP-EXISTING-PROJECT.md` into Claude Code at the repo root.
 - **New project:** paste `prompts/BOOTSTRAP-NEW-PROJECT.md` into Claude Code in an empty directory.
 
-Both install the kit, wire the CLAUDE.md triage router, cherry-pick the four compatible Superpowers skills (brainstorming, test-driven-development, systematic-debugging, requesting-code-review), verify, and commit. The prompts already point to `LeopoldoJacobsen/claude-planning-kit` — just copy and paste.
+Both install the kit, wire the CLAUDE.md triage router, cherry-pick the four compatible Superpowers skills, install Cursor agents + `/multi-model-review`, verify, and commit.
 
 ## 2. Plugin marketplace (auto-updates)
 
@@ -16,25 +45,24 @@ Both install the kit, wire the CLAUDE.md triage router, cherry-pick the four com
 /plugin install planning-kit@claude-planning-kit
 ```
 
-Skills are namespaced: `/planning-kit:feature-planning`, `/planning-kit:plan-execution`. Still add the triage block from `templates/CLAUDE-md-snippet.md` to each repo's `CLAUDE.md`, and cherry-pick the Superpowers skills per the bootstrap prompt's Superpowers step (Step 3 in the existing-project prompt, Step 5 in the new-project prompt).
+Skills are namespaced: `/planning-kit:feature-planning`, `/planning-kit:plan-execution`. Still add the triage block from `templates/CLAUDE-md-snippet.md`. **For Cursor multi-model**, also copy skills into `.claude/skills/` (so the rule can find them) plus `templates/cursor/agents/`, the rule, and `templates/cursor/commands/multi-model-review.md` as in the Cursor section above.
 
 ## 3. Manual copy
 
-Copy `plugins/planning-kit/skills/*` into `.claude/skills/` and `plugins/planning-kit/agents/*` into `.claude/agents/` (project-level, committed) or into `~/.claude/` (personal, all projects). Append the triage block to `CLAUDE.md`.
+Copy `plugins/planning-kit/skills/*` into `.claude/skills/` and `plugins/planning-kit/agents/*` into `.claude/agents/`. Append the triage block to `CLAUDE.md`. For Cursor, follow the Cursor section.
 
 ## Updating an existing install
 
-- **Marketplace installs:** update automatically; to force it now, run `/plugin marketplace update claude-planning-kit` inside the project.
-- **Vendored installs (bootstrap/manual):** paste `prompts/UPDATE-KIT.md` into Claude Code at the project root — it re-copies the kit's four components, refreshes the triage block, verifies nothing else changed, and commits.
+- **Marketplace installs:** `/plugin marketplace update claude-planning-kit`
+- **Vendored installs:** paste `prompts/UPDATE-KIT.md` — it refreshes skills/agents/Cursor assets while **preserving** customized `model:` pins when possible.
 
 ## Superpowers compatibility rules
 
-Install ONLY: `brainstorming`, `test-driven-development`, `systematic-debugging`, `requesting-code-review` (copy their skill folders). NEVER install `writing-plans`, `executing-plans`, `subagent-driven-development`, or `using-git-worktrees` alongside this kit — two planners/executors fight for triggering. The pipeline invokes brainstorming for vague ideas and blocks its handoff to their planner.
+Install ONLY: `brainstorming`, `test-driven-development`, `systematic-debugging`, `requesting-code-review`. NEVER install `writing-plans`, `executing-plans`, `subagent-driven-development`, or `using-git-worktrees` alongside this kit. The merge gate is `implementation-reviewer`; Superpowers `requesting-code-review` is optional extra, not a substitute.
 
-## Day-to-day flow (v2)
+## Day-to-day flow (v2.4)
 
-1. Describe a feature normally, in Portuguese or English. The router classifies it (DIRECT / LIGHT / FULL).
-2. Vague idea → brainstorming refines it into a design doc → pipeline continues from there.
-3. Planning runs continuously in one session: discovery → your answers → plan (+ per-phase files + `user-tasks.md`) → independent review → your approval. It pauses only for your input.
-4. You confirm Phase 0 prerequisites (keys, accounts, decisions) — collected up front, once.
-5. Execution runs all agent phases back-to-back (parallel sessions welcome; locks arbitrate) and ends by handing you `user-tasks.md`: your tests, validations, and sign-offs, batched at the end so they never block the agents.
+1. Describe a feature normally. Triage: DIRECT / LIGHT / FULL.
+2. FULL: discovery → questions → role matrix → parallel GPT/Grok/Fable council → plan → persistent cross-family review → your plan approval (+ DEGRADED override if needed) → Phase 0.
+3. Execution with peer diff review; ends with `user-tasks.md`.
+4. Anytime: `/multi-model-review` for a three-model adversarial pass on a diff.

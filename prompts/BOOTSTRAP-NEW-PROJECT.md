@@ -18,12 +18,16 @@ printf "# <PROJECT-NAME>\n\nProject initialized with claude-planning-kit v2.\n" 
 
 ```bash
 git clone --depth 1 https://github.com/LeopoldoJacobsen/claude-planning-kit /tmp/cpk
-mkdir -p .claude/skills .claude/agents
+mkdir -p .claude/skills .claude/agents .cursor/agents .cursor/rules
 cp -r /tmp/cpk/plugins/planning-kit/skills/. .claude/skills/
 cp -r /tmp/cpk/plugins/planning-kit/agents/. .claude/agents/
+mkdir -p .cursor/agents .cursor/rules .cursor/commands
+cp -r /tmp/cpk/templates/cursor/agents/. .cursor/agents/
+cp /tmp/cpk/templates/cursor/planning-kit.mdc .cursor/rules/planning-kit.mdc
+cp /tmp/cpk/templates/cursor/commands/multi-model-review.md .cursor/commands/multi-model-review.md
 ```
 
-(Note for the human: for auto-updates instead of a vendored copy, run `/plugin marketplace add LeopoldoJacobsen/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself — skills then live under the `/planning-kit:` namespace.)
+(Note for the human: for auto-updates instead of a vendored copy, run `/plugin marketplace add LeopoldoJacobsen/claude-planning-kit` and `/plugin install planning-kit@claude-planning-kit` yourself — skills then live under the `/planning-kit:` namespace. Still copy Cursor agents + `/multi-model-review`.)
 
 ## Step 3 — Create CLAUDE.md with the triage router
 
@@ -46,16 +50,16 @@ done
 
 ## Step 6 — Verify and commit
 
-1. Confirm: `.claude/skills/feature-planning/`, `.claude/skills/plan-execution/`, both agents, the four Superpowers skills, `CLAUDE.md` with the triage block, and `memory-bank/` with five files. If any Superpowers skill is missing, name it explicitly in the final report. Show a short tree as proof.
+1. Confirm: both skills, all six agents under `.claude/agents/`, six Cursor agent templates under `.cursor/agents/` (pinned trio), the Cursor rule, `.cursor/commands/multi-model-review.md`, the four Superpowers skills, `CLAUDE.md`, and the five memory files. If any dependency is missing, report it. Show a short tree as proof.
 2. Commit:
 
 ```bash
 git add -A
-git commit -m "chore: initialize <PROJECT-NAME> with claude-planning-kit v2 + selected Superpowers skills"
+git commit -m "chore: initialize <PROJECT-NAME> with planning-kit v2.4"
 ```
 
 Clean up `/tmp/cpk` and `/tmp/sp`.
 
 ## Step 7 — Report and hand off
 
-Summarize what was created, then tell the user exactly this: "The project is ready. Describe your first feature in plain language — any language works. If it's still a vague idea, I'll run brainstorming first and turn it into a design doc; if it's already a defined scope, the planning pipeline starts at discovery. Either way: plan → independent review → your approval → continuous execution, ending with your personal checklist of tests and inputs." Then stop — do not begin planning in this session.
+Summarize what was created, then tell the user: "The project is ready. Describe your first feature. Cursor agents are pinned to gpt-5.6-sol-max-fast / grok-4.5-fast-xhigh / claude-fable-5-thinking-max. Use /multi-model-review for three-model adversarial reviews." Then stop — do not begin planning in this session.

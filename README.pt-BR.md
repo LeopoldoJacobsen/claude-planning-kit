@@ -6,11 +6,11 @@ Kit de planejamento e execução para o Claude Code. Funciona como um "prompt in
 
 > **Visão geral visual:** [leopoldojacobsen.github.io/claude-planning-kit](https://leopoldojacobsen.github.io/claude-planning-kit/) — como funciona, o workflow completo e o que ele faz / não faz, numa página só (em inglês).
 
-**O loop completo:**
+**O loop completo (v2.4):**
 
 ```
-triagem → (brainstorm se a ideia for vaga) → discovery → perguntas → plano
-       → revisão independente → execução contínua → checklist final humano
+triagem → (brainstorm) → discovery → perguntas → matriz de papéis → conselho paralelo → síntese
+       → plano → revisão cross-family persistente (+ log) → execução → revisão do diff → checklist humano
 ```
 
 Tudo vira arquivo em `planning/<slug>/` — qualquer sessão retoma de onde parou, sem depender do histórico do chat.
@@ -83,6 +83,8 @@ As versões standalone (`prompts/*-standalone.md`) servem para agentes sem supor
 - **Trabalho humano nas bordas (v2):** pré-requisitos viram a Fase 0, coletada no início; todo o resto que depende de você (QA manual, testes reais de pagamento/afiliado, DNS, aprovações) é sequenciado DEPOIS da última fase de agente, no `user-tasks.md`. O revisor rejeita planos com passos humanos enterrados no meio.
 - **Paralelismo seguro:** fases são reivindicadas via lock files no diretório `.git` do clone (mesma máquina) mais um claim ref atômico enviado ao remote (`refs/claude-locks/…`) — sessões paralelas e colegas em outras máquinas nunca reivindicam a mesma fase. O status board commitado no `plan.md` é o registro durável.
 - **Compõe com Superpowers:** `brainstorming` refina ideias vagas; `test-driven-development`, `systematic-debugging` e `requesting-code-review` entram na execução. Os planners/executors do Superpowers NÃO são usados.
+- **Sem autoavaliação (v2.4):** conselho multi-modelo + crítico de plano persistente de outra família + revisor de implementação ≠ builder. Review same-family = DEGRADED e não autoriza código sem override humano em disco. No Cursor, pinne `model:` em `.cursor/agents/` — veja [`docs/CURSOR.md`](docs/CURSOR.md).
+- **Comparação com grill-me-codex:** [`docs/COMPARISON-GRILL-ME-CODEX.md`](docs/COMPARISON-GRILL-ME-CODEX.md).
 
 ## Compatibilidade com Superpowers
 

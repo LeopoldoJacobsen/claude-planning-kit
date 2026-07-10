@@ -3,7 +3,7 @@ name: feature-planning
 description: Context-optimized planning pipeline for features and significant changes. Use whenever the user asks to implement, build, add, create, refactor, or change anything that touches database schema, API contracts, environment variables, auth/permissions, payments, multi-tenancy, or another repository, spans more than ~10 files, or is estimated at more than one session — even if they never say "plan". Also use when starting a brand-new project. Artifacts persist in planning/<slug>/ so any session can resume. Do NOT use for DIRECT tasks (≤2 files, none of those impacts) or LIGHT tasks (3–10 files, none of those impacts) — Step 0 defines both.
 ---
 
-# Feature Planning Pipeline (v2.2)
+# Feature Planning Pipeline (v2.4)
 
 This skill is a **state machine over artifacts**. Every phase writes its output to `planning/<slug>/` and **commits it** — committed files, not chat history, are the durable memory, so any session (or teammate) can resume from them.
 
@@ -33,20 +33,25 @@ If the feature request is a rough idea rather than a defined scope AND a brainst
 |---|---|
 | `planning/<slug>/context-snapshot.md` | DISCOVERY |
 | `planning/<slug>/decisions.md` | QUESTIONS |
+| `planning/<slug>/orchestration/roles.md` | ROLE MATRIX (before or with COUNCIL) |
+| `planning/<slug>/council/synthesis.md` | COUNCIL |
 | `planning/<slug>/plan.md` | PLANNING |
 | `planning/<slug>/plan-review.md`, or its verdict is `CHANGES REQUIRED` | REVIEW / PLAN FIX |
-| — (review verdict is `APPROVED`) | EXECUTION — continuous, via the plan-execution skill |
+| verdict is `APPROVED (DEGRADED…)` and override line is blank/`NOT_REQUIRED`/`N/A` | PAUSE — require human degraded override on disk |
+| — (review verdict is `APPROVED`, or `APPROVED (DEGRADED…)` with dated human override; **and** `Plan approved by user` is dated) | EXECUTION — continuous, via the plan-execution skill |
 
 ## Global rules (every phase)
 
 1. **Language:** the user may write in any language; ALL artifacts and output must be in American English.
 2. **Never assume.** Anything unverifiable becomes a clarifying question — never a guess. Cite file paths for every claim about the project. If a new ambiguity surfaces during PLANNING, either resolve it from `decisions.md` or mark it inline as `[NEEDS CLARIFICATION: …]` and ask the user in one small batch before REVIEW. A plan containing any remaining marker is not reviewable.
 3. **Context budget:** never dump whole files into the conversation. Read only the sections needed; reference by `path:line`. Artifacts contain compressed findings, not transcripts. Targets: `context-snapshot.md` ≈ 800–1,000 words; `plan.md` overview ≈ 2 pages; every phase file fully self-contained.
-4. **Delegate exploration:** use the `repo-explorer` subagent for discovery (one invocation per area) and the `plan-reviewer` subagent for review. Subagents have their own context window; only their compressed reports enter this session.
-5. **Read-only until execution, but commit the plan:** DISCOVERY through REVIEW must not modify any project file. Only writes allowed: `planning/<slug>/` and, for brand-new projects, the `memory-bank/` scaffold. Commit `planning/<slug>/` at every phase boundary (`plan(<slug>): <phase>`) on the **integration target** branch decided at On start — these commits touch only `planning/` and are the one exception to never-committing-to-main. Without these commits, executor worktrees are created WITHOUT the plan.
-6. **Closed scope:** plan exactly the requested feature. Adjacent ideas go under "Out of scope / future work."
-7. **Compose, don't duplicate:** if an installed skill or subagent already covers a procedure, the plan references it instead of restating its content — always by the EXACT name recorded in the snapshot's AVAILABLE TOOLING list (namespaces differ per install: `superpowers:test-driven-development` as a plugin vs `test-driven-development` vendored). Prefer a TDD skill for logic-heavy phases, a systematic-debugging skill for bug-hunting work, and a code-review skill as the pre-merge gate, when installed. Skill bodies are loaded by the executor at execution time, never during planning.
-8. **Project principles are gates:** if `memory-bank/decisions.md`, `memory-bank/architecture.md`, or a `constitution.md` exists, the plan must comply with their recorded decisions or explicitly document the deviation and its reason in `plan.md`. The reviewer checks this.
+4. **Delegate independent thinking:** use `repo-explorer` for discovery, the three council agents for independent design analysis, `plan-reviewer` for the final plan gate, and `implementation-reviewer` during execution. Only compressed artifacts enter the orchestrator context.
+5. **Honest model identity (orchestrator-stamped):** when dispatching a subagent, record the **assigned** model ID the orchestrator selected into the artifact (source of truth). Also ask the agent to report `RUNTIME: provider / model / effort` as a cross-check. If assigned ≠ reported, or either is unknown, mark `unverified`. Prefer three different model families at high reasoning when available; proceed in explicit degraded mode when they are not. Never claim cross-model review from self-report alone.
+6. **Nobody grades their own work:** the plan critic's model family must differ from the planner's when Cursor (or the host) can assign it. Same-family **or unverified** diversity → verdict capped at `APPROVED (DEGRADED: …)` and **cannot authorize execution without an explicit human override recorded on disk** (`Plan approved by user` + degraded override when applicable). A fresh context is not a different grader. **Claude Code–only installs** (single provider) are always DEGRADED for cross-family claims — that is expected honesty, not a bug; record the override per plan or use Cursor with the pinned trio.
+7. **Read-only until execution, but commit the plan:** DISCOVERY through REVIEW must not modify any project file. Only writes allowed: `planning/<slug>/` and, for brand-new projects, the `memory-bank/` scaffold. Commit `planning/<slug>/` at every phase boundary (`plan(<slug>): <phase>`) on the **integration target** branch decided at On start — these commits touch only `planning/` and are the one exception to never-committing-to-main. Without these commits, executor worktrees are created WITHOUT the plan.
+8. **Closed scope:** plan exactly the requested feature. Adjacent ideas go under "Out of scope / future work."
+9. **Compose, don't duplicate:** if an installed skill or subagent already covers a procedure, the plan references it instead of restating its content — always by the EXACT name recorded in the snapshot's AVAILABLE TOOLING list.
+10. **Project principles are gates:** if `memory-bank/decisions.md`, `memory-bank/architecture.md`, or a `constitution.md` exists, the plan must comply with their recorded decisions or explicitly document the deviation and its reason in `plan.md`. The reviewer checks this.
 
 ## PHASE: DISCOVERY → `planning/<slug>/context-snapshot.md`
 
@@ -71,9 +76,44 @@ Produce a numbered list of clarifying questions for every ambiguity the snapshot
 
 After the user answers, write `decisions.md` as a table: question → decision → rationale/source. Continue.
 
+## PHASE: ROLE MATRIX → `planning/<slug>/orchestration/roles.md`
+
+Before the council (or with it), write the role matrix the rest of the pipeline will enforce:
+
+```markdown
+# Role matrix — <slug>
+| Role | Agent | Assigned model (orchestrator) | Family | Notes |
+|------|-------|-------------------------------|--------|-------|
+| Orchestrator / planner | main | <id or unverified> | <family> | |
+| architecture-council | architecture-council | <id> | <family> | read-only |
+| failure-council | failure-council | <id> | <family> | read-only |
+| simplicity-council | simplicity-council | <id> | <family> | read-only |
+| Plan critic (persistent) | plan-reviewer | <id ≠ planner> | <family> | read-only; resume same session on REVISE |
+| Preferred phase builder | (executor) | <id ≠ planner when possible> | <family> | |
+| Phase reviewer | implementation-reviewer | <id ≠ builder> | <family> | read-only; resume same session on fix rounds |
+```
+
+Diversity status: `verified` | `partial` | `unverified` | `DEGRADED: single runtime`. In Cursor, fill Assigned model from the agent frontmatter `model:` field (not from agent self-report). Commit and continue.
+
+## PHASE: COUNCIL → `planning/<slug>/council/*`
+
+For FULL tasks, dispatch `architecture-council`, `failure-council`, and `simplicity-council` **concurrently**, with identical inputs: the feature request/design, `context-snapshot.md`, and `decisions.md`. They work independently and read-only; never show one candidate to another. In Cursor, pin different high-reasoning families in `.cursor/agents/*.md` (`model:` frontmatter) — suggested mapping: GPT → architecture, Grok → failure, Claude/Fable → simplicity. Availability and orchestrator-stamped assignment take precedence over names.
+
+Save their verbatim reports as `council/architecture.md`, `council/failure.md`, and `council/simplicity.md`. Stamp each file's header with `ASSIGNED: <model id>`. Then the orchestrator writes `council/synthesis.md` containing:
+
+- the role matrix summary and diversity status: `verified`, `partial`, `unverified`, or `DEGRADED: single runtime`;
+- agreements supported by repository evidence;
+- disagreements and their evidence-based resolution (never majority vote alone);
+- rejected proposals and why;
+- consolidated design constraints and proof obligations for PLANNING.
+
+Optional (when diversity is verified): after the independent pass, resume each council agent once with the disagreement matrix and ask it to challenge the proposed synthesis — append exchanges to `council/debate-log.md`. Skip this when degraded; do not invent debate.
+
+If agents or multiple models are unavailable, run the three roles sequentially with fresh prompts and mark the synthesis `DEGRADED: single runtime`. Never claim cross-model review occurred when identity is unverified. Commit the council artifacts and continue.
+
 ## PHASE: PLANNING → `planning/<slug>/plan.md` + `planning/<slug>/phases/phase-N.md` + `planning/<slug>/user-tasks.md`
 
-Load ONLY the snapshot + decisions (+ design.md if present, plus targeted file checks if strictly needed). Copy the three skeletons below and fill EVERY section — write "None" rather than omitting a section.
+Load ONLY the snapshot + decisions + `council/synthesis.md` (+ design.md if present, plus targeted file checks if strictly needed). The plan must satisfy every consolidated constraint and proof obligation or explicitly reject it with evidence. Copy the three skeletons below and fill EVERY section — write "None" rather than omitting a section.
 
 **`plan.md`** — overview + index, max ~2 pages:
 
@@ -91,6 +131,7 @@ Load ONLY the snapshot + decisions (+ design.md if present, plus targeted file c
 ## Test baseline                    <!-- exact command(s) that run the full suite + what a pass looks like -->
 ## Integration target: <branch>     <!-- copy the value recorded on the first line of context-snapshot.md -->
 ## Merge convention: direct | PR    <!-- from the snapshot (area E); executors follow it without asking -->
+## Role matrix                      <!-- copy from orchestration/roles.md; builder ≠ planner when possible; reviewer ≠ builder -->
 ## Recommended installs (optional)  <!-- ideal-but-missing tooling, as a user decision -->
 ## Phase index                      <!-- doubles as the execution status board -->
 | # | Goal (one line) | depends-on | executor | status | branch |
@@ -143,19 +184,41 @@ so the executor invents nothing. One concrete input → output example per new b
 ## Phase 0 — Prerequisites (confirm before execution starts)
 - [ ] <item — exact steps — what "pass" looks like>
 Phase 0 confirmed by user: ____ (date)   <!-- the executor reads THIS line; fill it when the user confirms -->
+Plan approved by user: ____ (date)       <!-- REQUIRED before execution; fill when the user signs off the plan -->
+Degraded plan review override by user: NOT_REQUIRED   <!-- leave NOT_REQUIRED until REVIEW; if DEGRADED, replace with APPROVED_BY_USER:<date>; blank/N/A never authorizes -->
 ## Final validations (after the last agent phase)
 - [ ] <item — exact steps — what "pass" looks like — which phase it validates>
 ```
 
 Write all files, commit, continue.
 
-## PHASE: REVIEW → `planning/<slug>/plan-review.md`
+## PHASE: REVIEW → `planning/<slug>/plan-review.md` + `planning/<slug>/reviews/plan-review-log.md`
 
-Dispatch the `plan-reviewer` subagent with the paths to `plan.md`, `phases/`, `user-tasks.md`, `context-snapshot.md`, and — when brainstorming produced one — `design.md`. Its fresh context is the point: if the plan cannot be validated from the artifacts alone, it is under-specified. Among its failure classes, it will reject any user-dependent step buried mid-plan, any remaining `[NEEDS CLARIFICATION]` marker, any acceptance criterion without a runnable verification, and — when a design doc exists — any undocumented divergence from the decisions approved in brainstorming.
+Dispatch the `plan-reviewer` subagent with the paths to `plan.md`, `phases/`, `user-tasks.md`, `context-snapshot.md`, `council/synthesis.md`, `orchestration/roles.md`, and — when brainstorming produced one — `design.md`. **Round 1 must be a fresh context** (validates the artifacts stand alone). Among its failure classes, it will reject any user-dependent step buried mid-plan, any remaining `[NEEDS CLARIFICATION]` marker, any acceptance criterion without a runnable verification, and — when a design doc exists — any undocumented divergence from the decisions approved in brainstorming.
 
-Save the subagent's full report verbatim to `plan-review.md`, including its verdict: `APPROVED` or `CHANGES REQUIRED` with numbered findings (severity, evidence path, suggested fix).
+Also give the reviewer `council/synthesis.md`. It must spot-check that the plan resolves every disagreement and proof obligation. The final reviewer must not be one of the council participants: council agreement is advisory, and only this gate approves execution.
 
-If changes are required, run **PLAN FIX** in this same session: findings that need a product call the artifacts cannot answer go to the user; address every other finding autonomously, update plan/phase files, mark each finding resolved, re-dispatch `plan-reviewer`. **After 3 rounds without `APPROVED`, stop and present the remaining findings to the user as decisions** (a legitimate pause). Once `APPROVED`: present the plan + the Phase 0 prerequisites checklist to the user. When the user confirms the prerequisites, **record it on disk**: check the Phase 0 boxes and fill the "Phase 0 confirmed by user" line in `user-tasks.md`, flip Phase 0's row to `done` in `plan.md`, commit — then hand off to the **`plan-execution`** skill. No later session should ever have to re-ask.
+**Diversity gate:** stamp `ASSIGNED: <model id>` into the review prompt from `orchestration/roles.md`. If the plan critic's family equals the planner's, or assignment is unverified/missing, tell the reviewer to use `APPROVED (DEGRADED: same-family review)` or `APPROVED (DEGRADED: unverified diversity)` at best — never claim cross-model review. Also pass the three council reports (not only synthesis) so the critic can spot dropped disagreements.
+
+Save the subagent's full report as the latest `plan-review.md`. **Also append** the round to `reviews/plan-review-log.md` (create on first round). Paste the critique as-is (verdict first); then append the planner response:
+
+```markdown
+## Round <n> — Plan critic (<assigned model>)
+<full critique verbatim — includes VERDICT as first line>
+
+### Planner response
+- ACCEPTED <F1>: <what changed in which file>
+- REJECTED <F2>: <reason with evidence>
+- OPEN <F3>: <needs user / still disputed>
+Critic session id: <Cursor agent id, or "new (prior unavailable)" if resume failed>
+Reviewed plan commit: <git rev-parse HEAD of planning artifacts>
+```
+
+If changes are required, run **PLAN FIX** in this same session: findings that need a product call the artifacts cannot answer go to the user; address every other finding autonomously, update plan/phase files, log ACCEPTED/REJECTED with reasons. **Rounds 2..N: resume the SAME plan-reviewer session** when the host supports it (Cursor Task `resume`). If resume is unavailable (Claude Code, new chat, dead session), dispatch a fresh reviewer with the full review log and record `Critic session id: new (prior unavailable)`. Cap at **5 rounds** (`MAX_PLAN_ROUNDS`); after 3 rounds without `APPROVED`, also surface remaining findings to the user as decisions (a legitimate pause). At the cap without approval: do NOT fake convergence — list unresolved points for the human to break the tie.
+
+Once `APPROVED`: present the plan + the Phase 0 prerequisites checklist to the user and ask for plan sign-off. If the verdict is DEGRADED, **stop and require** `Degraded plan review override by user: APPROVED_BY_USER:<date>` before execution — `NOT_REQUIRED`, blank, or `N/A` never authorizes.
+
+When the user confirms the plan, Phase 0, and any degraded override, **record it on disk**: fill `Plan approved by user`, Phase 0 confirmation, and the override line as applicable; flip Phase 0's row to `done` in `plan.md`; commit — then hand off to the **`plan-execution`** skill. No later session should ever have to re-ask.
 
 ## PHASE: EXECUTION — continuous, via the plan-execution skill
 

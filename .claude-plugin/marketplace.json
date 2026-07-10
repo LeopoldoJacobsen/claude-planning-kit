@@ -3,12 +3,12 @@
   "name": "claude-planning-kit",
   "owner": { "name": "Leopoldo Jacobsen" },
   "description": "Spec-driven planning and continuous lock-safe execution workflow for Claude Code",
-  "version": "2.2.1",
+  "version": "2.4.0",
   "plugins": [
     {
       "name": "planning-kit",
       "source": "./plugins/planning-kit",
-      "description": "Spec-driven feature planning (discovery, questions, plan, independent review) plus a continuous, lock-safe plan executor.",
+      "description": "Spec-driven planning with a multi-model council, persistent cross-family review logs, and continuous lock-safe execution.",
       "category": "workflow",
       "tags": ["planning", "workflow", "spec-driven", "execution", "worktrees"]
     }

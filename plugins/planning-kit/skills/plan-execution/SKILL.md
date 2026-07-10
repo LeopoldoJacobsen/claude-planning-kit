@@ -3,19 +3,22 @@ name: plan-execution
 description: Continuous, disciplined executor for approved implementation plans produced by the feature-planning pipeline. Use whenever the user asks to execute, implement, continue, or resume a plan, a phase, or anything referencing a planning/<slug>/ folder — e.g. "execute the affiliate-system plan", "continue the plan", "run the next phases". Executes eligible AGENT phases back-to-back in the same session with phase locks, worktree/branch isolation, step-by-step commits, scope fencing, and a strict definition of done. Never executes user phases — it compiles them into a final human checklist. Do NOT use for planning or for tasks without an approved plan.
 ---
 
-# Plan Execution Protocol (v2.2) — continuous, lock-safe
+# Plan Execution Protocol (v2.4) — continuous, lock-safe, peer-reviewed
 
 You are a senior implementer executing an approved plan. Discipline over creativity: the design decisions were already made and reviewed — your job is faithful, verifiable execution. All output in American English, regardless of the user's language.
 
 **Session policy:** execute eligible AGENT phases **continuously in this same session**. NEVER ask the user to `/clear`, restart, or open a new session between phases — not for context size, not for "freshness", not for any reason. After each phase's Definition of Done, immediately claim the next eligible phase and keep going (see §7). All durable state is on disk (locks, status board, logs), so long sessions are safe by design.
 
+**Role-flip rule:** prefer a builder model family different from the plan author (see `orchestration/roles.md`). The phase reviewer MUST be a different agent session and, when supported, a different model family from the builder. Same-family review → `APPROVED (DEGRADED: same-family review)` and cannot authorize merge without an explicit human override recorded in the phase execution log.
+
 ## 1. Preconditions (verify per phase — any failure = skip or stop and report)
 
-1. `planning/<slug>/plan-review.md` exists with verdict `APPROVED`. No approved review, no execution.
+1. `planning/<slug>/plan-review.md` exists with verdict `APPROVED`, OR a DEGRADED verdict **and** `user-tasks.md` has `Degraded plan review override by user: APPROVED_BY_USER:<date>` (literal prefix; `NOT_REQUIRED`, blank, and `N/A` never count). Also require a dated `Plan approved by user:` line. Prefer also checking that `orchestration/roles.md` and `reviews/plan-review-log.md` exist for FULL plans created under v2.4+.
 2. **Phase 0 is confirmed ON DISK:** the "Phase 0 confirmed by user" line in `user-tasks.md` is filled (or Phase 0's `plan.md` row is `done`). A plan whose Phase 0 is "None — no prerequisites" counts as confirmed. If confirmation is missing, present the checklist and stop; when the user confirms, record it (check the boxes, fill the date line, flip the row, commit) so no session ever asks again.
 3. The target phase exists (`planning/<slug>/phases/phase-N.md`) and is tagged **`executor: agent`**. NEVER claim an `executor: user` phase — those belong to the final human checklist.
 4. **Dependencies done:** every phase it depends on has status `done` in the plan.md index **on the freshly pulled integration target**. `done` strictly means merged into the integration target; `awaiting-merge` does NOT count — with ONE exception: a row YOU set to `awaiting-merge (chained)` counts as satisfied for the next phase of that same chain (§3).
 5. **No territory overlap:** its "files to touch" share nothing with any phase currently `in-progress` (locks + index). Overlap → not eligible now.
+6. **Clean worktree gate:** before creating or entering the phase worktree, the main checkout's unrelated dirty files must not pollute the phase diff. If the main tree has uncommitted changes outside `planning/<slug>/`, stop and ask the user to commit or stash first. A verbal "it's fine" is not enough — record `Clean-tree waiver by user: APPROVED_BY_USER:<date>` in the phase execution log if they insist.
 
 ## 2. Claim the phase (conflict prevention between parallel agents)
 
@@ -31,7 +34,7 @@ if ! (set -o noclobber; printf 'branch=%s\nfiles=%s\nowner=%s\nstarted=%s\n' \
 ```
 
 - Lock exists → another agent owns it. Move to the next eligible phase.
-- **Cross-machine claim (only when a remote exists):** after taking the local lock, atomically claim the phase on the remote by pushing a unique lock commit to a claim ref. Ref creation is atomic on the server, and each lock commit is unique, so two machines can never both succeed:
+- **Cross-machine claim (when a remote exists):** after taking the local lock, atomically claim the phase on the remote by pushing a unique lock commit to a claim ref. Do not skip this when a remote exists — local locks are invisible to other machines. Ref creation is atomic on the server, and each lock commit is unique, so two machines can never both succeed:
 
 ```bash
 CLAIM="refs/claude-locks/<slug>/phase-N"
@@ -62,7 +65,7 @@ Load `plan.md` fully ONCE per session (overview + index). Per phase, load ONLY: 
 3. **Scope fence:** modify ONLY the files listed (plus `planning/<slug>/` and `memory-bank/`, which are always allowed for logs and status). Trivial necessary exceptions (an import, an index/barrel file, a lockfile) are allowed — record each under DEVIATIONS in the log. Anything beyond trivial: stop, flag, wait.
 4. **Plan vs. reality mismatch — tiered:** if a step cannot be executed exactly as written but its intent is unambiguous and the minimal correction preserves the phase's contracts, scope fence, and acceptance criteria (a renamed symbol, a moved file, a drifted line number, superficial signature drift), apply the correction and record it under DEVIATIONS — do not stop. Stop and ask the user, proposing the minimal correction, ONLY when the correction would change an API contract, schema, dependency, acceptance criterion, or security behavior. Never silently redesign.
 5. **Cross-repo contracts:** implement exactly with the versioning/migration path the plan specifies, and flag in the log for downstream coordination.
-6. **Pre-merge review:** if a code-review skill is installed or named in the phase's required tooling, run it before Definition of Done; treat critical findings as blockers.
+6. **Mandatory independent pre-merge review:** dispatch `implementation-reviewer` (or an available read-only review agent) with the frozen phase file, plan, full branch diff (or base-to-head for chained phases — record `Phase base SHA` at claim), execution log, and any prior `reviews/phase-N-review-log.md`. It must be a different agent session and, when supported, a different model family from the implementer — stamp `ASSIGNED:` from `orchestration/roles.md`. The orchestrator saves its report from the main checkout as `planning/<slug>/execution/phase-N-review.md` and **appends** the round to `planning/<slug>/reviews/phase-N-review-log.md` with ACCEPTED/REJECTED responses and the critic session id; the reviewer never writes those files. Answer every finding in the execution log, fix all critical/major findings, and **resume the same reviewer session** when possible; if resume fails, dispatch fresh with the full phase review log and record `new (prior unavailable)`. After 3 unsuccessful rounds (`MAX_FIX_ROUNDS`), stop and surface the unresolved disagreement; never manufacture approval; never let the reviewer take over and finish the code. If the verdict is DEGRADED, require `Degraded merge override by user: APPROVED_BY_USER:<date>` in the phase log before integrating. If no independent agent is available, stop before merge and request human review — self-review is not equivalent.
 
 ## 6. Definition of done (ALL required per phase)
 
@@ -70,6 +73,7 @@ Load `plan.md` fully ONCE per session (overview + index). Per phase, load ONLY: 
 - [ ] The plan's **Test baseline** passes with no new failures vs. the recorded baseline.
 - [ ] One line appended to `memory-bank/changelog.md` (append only — no need to re-read the file).
 - [ ] Execution log written: `planning/<slug>/execution/phase-N-log.md` (steps, DEVIATIONS, decisions, follow-ups).
+- [ ] Independent implementation review is `APPROVED` (or `APPROVED (DEGRADED…)` with human merge override recorded in the phase log); its report, review-log rounds, and implementer responses are persisted, including orchestrator-stamped and reported runtime identities.
 - [ ] Clean history pushed; branch integrated per the plan's **Merge convention**: `direct` → merge into the integration target and set the row to `done`; `PR` → open the PR and set the row to `awaiting-merge` (NOT `done` — dependents stay blocked until the merge lands; say so in your summary). `done` strictly means merged.
 - [ ] Status flip + execution log committed in the main checkout on the integration target and pushed (per §2).
 - [ ] Lock removed: `rm "$LOCK"`; when a remote exists, claim ref deleted: `git push origin ":refs/claude-locks/<slug>/phase-N"`.
@@ -80,8 +84,10 @@ After completing a phase's DoD and releasing its lock, immediately re-evaluate t
 
 - **(a) No eligible agent phases remain** (the rest are `executor: user`, blocked, or done) → compile/refresh `planning/<slug>/user-tasks.md`, present the human checklist (each item: exact steps + what "pass" looks like + which phase it validates), state which branches/PRs await, and stop.
 - **(b) A blocker or contract-level plan-vs-reality mismatch** (per §5.4) needs the user → stop and ask.
+- **(c) Review-gate stop:** fix-round cap hit, DEGRADED merge awaiting human override, or no independent reviewer available → stop and surface.
+- **(d) Clean-tree / claim failure:** dirty unrelated tree without waiver, or lock/claim cannot be taken → stop or move to another eligible phase.
 
-These are the ONLY two stop conditions. Context size is never a reason to stop: before each new phase, re-read only the phase index + the phase file (per §4) instead of relying on chat history — the disk artifacts ARE the working memory. Do not suggest `/clear` or a new session to the user.
+These are the ONLY stop conditions. Context size is never a reason to stop: before each new phase, re-read only the phase index + the phase file (per §4) instead of relying on chat history — the disk artifacts ARE the working memory. Do not suggest `/clear` or a new session to the user.
 
 Repos without a remote (fresh local projects): skip every pull/push step; merges are local.
 

@@ -261,7 +261,7 @@
       <a href="#start">get started</a>
       <a href="#does">does / doesn't</a>
       <a href="https://github.com/LeopoldoJacobsen/claude-planning-kit">github ↗</a>
-      <span class="badge">v2.2.1</span>
+      <span class="badge">v2.4.0</span>
     </div>
   </div>
 </header>
@@ -285,7 +285,7 @@
     <div class="wrap">
       <p class="sec-label"><b>01</b> How it works</p>
       <h2>Four ideas hold the whole thing together</h2>
-      <p class="sec-intro">The kit is two skills (<code>feature-planning</code>, <code>plan-execution</code>), two subagents (<code>repo-explorer</code>, <code>plan-reviewer</code>) and a 15-line triage router you paste into each repo's <code>CLAUDE.md</code>.</p>
+      <p class="sec-intro">The kit is two skills (<code>feature-planning</code>, <code>plan-execution</code>), a multi-model council + peer reviewers, Cursor agents pinned to GPT / Grok / Fable, <code>/multi-model-review</code>, and a triage router you paste into each repo's <code>CLAUDE.md</code>.</p>
       <div class="concepts">
         <div class="concept">
           <span class="num">№ 1 — DISK OVER CHAT</span>
@@ -362,7 +362,7 @@
           <div class="station-head"><h3>Independent review</h3><span class="chip sub">subagent</span></div>
           <p>The <code>plan-reviewer</code> reads only the artifacts — fresh context, zero conversation history — spot-checks 5–10 factual claims against the actual repository, and hunts for breaking contract changes, missing migrations, tenant-isolation holes, buried user steps, and undocumented divergence from the brainstorm's design doc.</p>
           <span class="artifact">planning/&lt;slug&gt;/plan-review.md</span>
-          <div class="loopback">verdict: CHANGES REQUIRED → plan is fixed and re-reviewed, up to 3 rounds, until APPROVED — then remaining findings become your decisions</div>
+          <div class="loopback">verdict: CHANGES REQUIRED → plan is fixed and the same critic is resumed (or fresh + review log), up to 5 rounds (surface to you after 3), until APPROVED — DEGRADED needs your override</div>
         </div>
         <div class="station is-user">
           <div class="station-head"><h3>Approval &amp; prerequisites</h3><span class="chip you">you — pause nº 2</span></div>
@@ -507,7 +507,7 @@ plugins/planning-kit/agents/* <span class="c">→</span> .claude/agents/
 
 <footer>
   <div class="wrap foot">
-    <p><span style="color: var(--amber);">$</span> claude-planning-kit v2.2.1 — spec-driven planning, lock-safe execution</p>
+    <p><span style="color: var(--amber);">$</span> claude-planning-kit v2.4.0 — multi-model planning, peer-reviewed execution</p>
     <p><a href="https://github.com/LeopoldoJacobsen/claude-planning-kit">github.com/LeopoldoJacobsen/claude-planning-kit</a></p>
   </div>
 </footer>

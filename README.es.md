@@ -6,11 +6,11 @@ Kit de planificación y ejecución para Claude Code. Funciona como un "prompt in
 
 > **Resumen visual:** [leopoldojacobsen.github.io/claude-planning-kit](https://leopoldojacobsen.github.io/claude-planning-kit/) — cómo funciona, el workflow completo y qué hace / no hace, en una sola página (en inglés).
 
-**El ciclo completo:**
+**El ciclo completo (v2.4):**
 
 ```
-triaje → (brainstorm si la idea es vaga) → discovery → preguntas → plan
-      → revisión independiente → ejecución continua → checklist final humano
+triaje → (brainstorm) → discovery → preguntas → matriz de roles → consejo paralelo → síntesis
+      → plan → revisión cross-family persistente (+ log) → ejecución → revisión del diff → checklist humano
 ```
 
 Todo se convierte en un archivo en `planning/<slug>/` — cualquier sesión retoma desde donde se detuvo, sin depender del historial del chat.
@@ -83,6 +83,8 @@ Las versiones standalone (`prompts/*-standalone.md`) sirven para agentes sin sop
 - **Trabajo humano en los bordes (v2):** los prerrequisitos se vuelven la Fase 0, recolectada al inicio; todo lo demás que depende de ti (QA manual, pruebas reales de pago/afiliado, DNS, aprobaciones) se secuencia DESPUÉS de la última fase de agente, en `user-tasks.md`. El revisor rechaza planes con pasos humanos enterrados a mitad de camino.
 - **Paralelismo seguro:** las fases se reclaman vía lock files en el directorio `.git` del clon (misma máquina) más un claim ref atómico enviado al remoto (`refs/claude-locks/…`) — sesiones paralelas y compañeros en otras máquinas nunca reclaman la misma fase. El status board commiteado en `plan.md` es el registro durable.
 - **Compone con Superpowers:** `brainstorming` refina ideas vagas; `test-driven-development`, `systematic-debugging` y `requesting-code-review` entran en la ejecución. Los planners/executors de Superpowers NO se usan.
+- **Sin autoevaluación (v2.4):** consejo multi-modelo + crítico de plan persistente de otra familia + revisor de implementación ≠ builder. Review same-family = DEGRADED y no autoriza código sin override humano en disco. En Cursor, fija `model:` en `.cursor/agents/` — ver [`docs/CURSOR.md`](docs/CURSOR.md).
+- **Comparación con grill-me-codex:** [`docs/COMPARISON-GRILL-ME-CODEX.md`](docs/COMPARISON-GRILL-ME-CODEX.md).
 
 ## Compatibilidad con Superpowers
 

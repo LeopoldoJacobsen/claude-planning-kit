@@ -1,0 +1,24 @@
+---
+description: Route consequential work through the planning kit with the pinned Fable/GPT/Grok trio
+alwaysApply: true
+---
+
+# Planning Kit Router (v2.4)
+
+Classify every request before editing:
+
+- DIRECT: at most 2 files and no schema, API contract, environment, auth, payment, tenancy, or cross-repo impact. Execute directly.
+- LIGHT: 3–10 files with none of those impacts. Present a 5–10 line plan and wait for approval.
+- FULL: anything larger or consequential. Follow `.claude/skills/feature-planning/SKILL.md`, storing state under `planning/<slug>/`.
+
+Default Cursor model pins (from `.cursor/agents/`):
+
+- architecture-council → `gpt-5.6-sol-max-fast`
+- failure-council → `grok-4.5-fast-xhigh`
+- simplicity-council → `claude-fable-5-thinking-max`
+- plan-reviewer → `gpt-5.6-sol-max-fast` (must ≠ planner family)
+- implementation-reviewer → `grok-4.5-fast-xhigh` (must ≠ builder family)
+
+For FULL work: write `orchestration/roles.md`, run the three council agents in parallel, synthesize by evidence, run persistent plan review with append-only log, require dated plan approval (and DEGRADED override when needed), then execute with peer diff review. Use `/multi-model-review` for ad-hoc three-model adversarial reviews of any diff.
+
+Never claim cross-model validation without stamped assignments that differ by family (GPT / Grok / Fable-Claude).
